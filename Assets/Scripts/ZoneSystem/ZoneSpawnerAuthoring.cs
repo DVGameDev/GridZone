@@ -116,6 +116,12 @@ public class ZoneSpawnerAuthoring : MonoBehaviour
                 ColorRed = new float4(authoring.ColorRed.r, authoring.ColorRed.g, authoring.ColorRed.b, authoring.ColorRed.a),
                 ColorPurple = new float4(authoring.ColorPurple.r, authoring.ColorPurple.g, authoring.ColorPurple.b, authoring.ColorPurple.a)
             });
+            // 6. Базовый серый цвет грида
+            AddComponent(entity, new ZoneBaseGridColor
+            {
+                Color = new float4(authoring.ColorGray.r, authoring.ColorGray.g, authoring.ColorGray.b, authoring.ColorGray.a)
+            });
+
 
         }
     }

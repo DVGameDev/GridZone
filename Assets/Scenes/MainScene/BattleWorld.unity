@@ -135,7 +135,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &290855526
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -143,7 +143,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 290855525}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b4549507c620e7c43a84180a4c6aedfe, type: 3}
   m_Name: 
@@ -238,9 +238,80 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1760402133
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1760402135}
+  - component: {fileID: 1760402134}
+  m_Layer: 0
+  m_Name: ZoneSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1760402134
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1760402133}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7efce0e4ffcf7647921c5d445041ea4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZoneSpawnerAuthoring
+  EnableZoneMode: 1
+  HexCellPrefab: {fileID: 5866980474319463971, guid: 3bdc3ab88fe0204419208f930ef16e9f, type: 3}
+  Width: 20
+  Height: 20
+  HexSize: 1
+  LevelGreen: 0
+  LevelYellow: 5
+  LevelOrange: 10
+  LevelRed: 15
+  ColorGreen: {r: 0, g: 1, b: 0, a: 0.3}
+  ColorYellow: {r: 1, g: 0.92, b: 0.016, a: 0.3}
+  ColorOrange: {r: 1, g: 0.5, b: 0, a: 0.3}
+  ColorRed: {r: 1, g: 0, b: 0, a: 0.3}
+  GreenProbability: 0.15
+  GreenSizeMin: 2
+  GreenSizeMax: 5
+  OrangeProbability: 0.1
+  OrangeSizeMin: 2
+  OrangeSizeMax: 5
+  RedProbability: 0.05
+  RedSizeMin: 1
+  RedSizeMax: 3
+  ColorGray: {r: 0.5, g: 0.5, b: 0.5, a: 0}
+  ColorBlue: {r: 0, g: 0, b: 1, a: 0}
+  ColorBlack: {r: 0, g: 0, b: 0, a: 0.8}
+  ColorPurple: {r: 0.6, g: 0, b: 0.8, a: 0.5}
+--- !u!4 &1760402135
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1760402133}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 290855527}
   - {fileID: 414506254}
+  - {fileID: 1760402135}

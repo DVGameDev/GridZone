@@ -143,6 +143,11 @@ public partial class UnitSpawnerSystem : SystemBase
                 EntityManager.AddComponentData(unitInstance, new UnitFacing { Value = facingDir });
                 EntityManager.AddComponentData(unitInstance, new MoveCommand { IsMoving = false, MoveSpeed = 5.0f });
                 EntityManager.AddComponentData(unitInstance, new GridCoordinates { Value = new int2(unitCfg.PositionX, unitCfg.PositionZ) });
+                // 🔥 ZONE: добавить радиацию герою (ID = 0)
+                if (unitCfg.Id == 0)
+                {
+                    EntityManager.AddComponentData(unitInstance, new HeroRadiationData { TotalRadiation = 0 });
+                }
 
                 // --- MAP REGISTRATION ---
                 if (unitCfg.PositionX >= 0 && unitCfg.PositionX < gridSize.x &&

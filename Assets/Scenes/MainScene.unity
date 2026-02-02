@@ -337,7 +337,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 493838afeb379da4085ae8d4962c6b2c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OrbitCamera
-  Target: {x: 5, y: 0, z: 5}
+  Target: {x: 5, y: 0, z: 15}
   Distance: 10
   Height: 5
   Angle: 45

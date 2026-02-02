@@ -33,6 +33,7 @@ public partial struct ZoneSpawnerSystem : ISystem
             var spawnerEntity = spawnerEntities[0];
             var spawnerData = spawnerComponents[0];
             var radiationConfig = state.EntityManager.GetComponentData<ZoneRadiationConfig>(spawnerEntity);
+            var baseGridColor = state.EntityManager.GetComponentData<ZoneBaseGridColor>(spawnerEntity);
             var islandConfig = state.EntityManager.GetComponentData<ZoneIslandConfig>(spawnerEntity);
 
             int qCount = spawnerData.GridSize.x;
@@ -79,14 +80,14 @@ public partial struct ZoneSpawnerSystem : ISystem
             mapBuffer.ResizeUninitialized(totalCells);
             radiationBuffer.ResizeUninitialized(totalCells);
 
-            // 5. Инициализация через Job
+            // 5. Инициализация через Job (базовая Yellow карта)
             var initJob = new InitializeZoneGridJob
             {
                 Instances = instances,
                 GridSize = new int2(qCount, rCount),
                 HexSize = spawnerData.HexSize,
                 YellowRadiation = radiationConfig.LevelYellow,
-                YellowColor = radiationConfig.ColorYellow,
+                BaseGrayColor = baseGridColor.Color, // 🔥 ИЗМЕНЕНО: базовый серый цвет
                 Transforms = state.GetComponentLookup<LocalTransform>(false),
                 Coordinates = state.GetComponentLookup<GridCoordinates>(false),
                 Colors = state.GetComponentLookup<URPMaterialPropertyBaseColor>(false),
@@ -98,18 +99,50 @@ public partial struct ZoneSpawnerSystem : ISystem
             var jobHandle = initJob.Schedule(totalCells, 64);
             jobHandle.Complete();
 
+            // 🔥 6. Генерация островов радиации
+            ZoneIslandGenerator.GenerateGreenIslands(radiationBuffer, spawnerData.GridSize, radiationConfig, islandConfig, 1234);
+            ZoneIslandGenerator.GenerateOrangeIslands(radiationBuffer, spawnerData.GridSize, radiationConfig, islandConfig, 5678);
+            ZoneIslandGenerator.GenerateRedIslands(radiationBuffer, spawnerData.GridSize, radiationConfig, islandConfig, 9012);
+
+            // 🔥 7. Применение цветов к клеткам
+            //ApplyRadiationColorsToCells(radiationBuffer, radiationConfig, colorsLookup: state.GetComponentLookup<URPMaterialPropertyBaseColor>(false), customColorsLookup: state.GetComponentLookup<CellCustomColor>(false));
+
             instances.Dispose();
 
-            // 🔥 Удаляем ZoneSpawnerComponent, оставляем конфиги как синглтоны
-            state.EntityManager.RemoveComponent<ZoneSpawnerComponent>(spawnerEntity);
-            state.EntityManager.SetName(spawnerEntity, "ZoneConfig");
-
-            Debug.Log("[ZoneSpawnerSystem] ZONE map generated successfully!");
         }
-
-        spawnerEntities.Dispose();
-        spawnerComponents.Dispose();
     }
+
+    /// <summary>
+    /// Применяет цвета радиации ко всем клеткам
+    /// </summary>
+    private static void ApplyRadiationColorsToCells(
+        DynamicBuffer<ZoneCellRadiation> radiationBuffer,
+        ZoneRadiationConfig radiationConfig,
+        ComponentLookup<URPMaterialPropertyBaseColor> colorsLookup,
+        ComponentLookup<CellCustomColor> customColorsLookup)
+    {
+        for (int i = 0; i < radiationBuffer.Length; i++)
+        {
+            var radiation = radiationBuffer[i];
+
+            float4 cellColor;
+            switch (radiation.RadiationLevel)
+            {
+                case 0: cellColor = radiationConfig.ColorGreen; break;
+                case 5: cellColor = radiationConfig.ColorYellow; break;
+                case 10: cellColor = radiationConfig.ColorOrange; break;
+                case 15: cellColor = radiationConfig.ColorRed; break;
+                default: cellColor = radiationConfig.ColorYellow; break;
+            }
+
+            var cellEntity = radiationBuffer[i].CellEntity; // 🔥 Нужно добавить CellEntity в ZoneCellRadiation!
+            if (colorsLookup.HasComponent(cellEntity))
+                colorsLookup[cellEntity] = new URPMaterialPropertyBaseColor { Value = cellColor };
+            if (customColorsLookup.HasComponent(cellEntity))
+                customColorsLookup[cellEntity] = new CellCustomColor { BaseColor = cellColor };
+        }
+    }
+
 
     /// <summary>
     /// Burst Job для инициализации ZONE карты (все клетки Yellow)
@@ -121,7 +154,8 @@ public partial struct ZoneSpawnerSystem : ISystem
         [ReadOnly] public int2 GridSize;
         [ReadOnly] public float HexSize;
         [ReadOnly] public int YellowRadiation;
-        [ReadOnly] public float4 YellowColor;
+        [ReadOnly] public float4 BaseGrayColor;
+
 
         [NativeDisableParallelForRestriction] public ComponentLookup<LocalTransform> Transforms;
         [NativeDisableParallelForRestriction] public ComponentLookup<GridCoordinates> Coordinates;
@@ -145,9 +179,10 @@ public partial struct ZoneSpawnerSystem : ISystem
             // Координаты
             Coordinates[instance] = new GridCoordinates { Value = new int2(q, r) };
 
-            // 🔥 Цвет радиации (Yellow с прозрачностью)
-            Colors[instance] = new URPMaterialPropertyBaseColor { Value = YellowColor };
-            CustomColors[instance] = new CellCustomColor { BaseColor = YellowColor };
+            // 🔥 Базовый серый прозрачный цвет
+            Colors[instance] = new URPMaterialPropertyBaseColor { Value = BaseGrayColor };
+            CustomColors[instance] = new CellCustomColor { BaseColor = BaseGrayColor };
+
 
             // Заполняем GridCellElement
             MapBuffer[index] = new GridCellElement
@@ -166,9 +201,11 @@ public partial struct ZoneSpawnerSystem : ISystem
             RadiationBuffer[index] = new ZoneCellRadiation
             {
                 GridPos = new int2(q, r),
+                CellEntity = instance, // 🔥 ДОБАВИТЬ
                 RadiationLevel = YellowRadiation,
                 IsVisited = false
             };
+
         }
     }
 }

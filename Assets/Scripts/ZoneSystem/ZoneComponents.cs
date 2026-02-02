@@ -2,6 +2,23 @@ using Unity.Entities;
 using Unity.Mathematics;
 
 /// <summary>
+/// Базовый серый цвет грида (прозрачный)
+/// </summary>
+public struct ZoneBaseGridColor : IComponentData
+{
+    public float4 Color;
+}
+
+public struct ZoneCellRadiation : IBufferElementData
+{
+    public int2 GridPos;
+    public Entity CellEntity; // 🔥 ДОБАВИТЬ
+    public int RadiationLevel;
+    public bool IsVisited;
+}
+
+
+/// <summary>
 /// Тег: режим ZONE активен (синглтон)
 /// </summary>
 public struct ZoneModeTag : IComponentData { }
@@ -43,15 +60,7 @@ public struct ZoneIslandConfig : IComponentData
     public int RedSizeMax;
 }
 
-/// <summary>
-/// Радиация клетки (отдельный буфер на GridMap)
-/// </summary>
-public struct ZoneCellRadiation : IBufferElementData
-{
-    public int2 GridPos;
-    public int RadiationLevel;   // 0, 5, 10, 15
-    public bool IsVisited;       // Посещена героем
-}
+
 
 /// <summary>
 /// Радиация героя (на entity юнита)
