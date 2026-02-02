@@ -132,7 +132,6 @@ public partial class GridHighlightSystem : SystemBase
             if (!EntityManager.Exists(cellEntity)) continue;
 
             var coords = EntityManager.GetComponentData<GridCoordinates>(cellEntity);
-            // 🔥 Универсальная индексация (работает для Quad и Hex)
             int index = GridUtils.GridToIndex(coords.Value, gridSize);
 
             if (index >= 0 && index < buffer.Length)
@@ -141,16 +140,28 @@ public partial class GridHighlightSystem : SystemBase
                 cell.IsHighlighted = false;
                 buffer[index] = cell;
 
-                // 🔥 ИСПРАВЛЕНО: ВСЕГДА восстанавливаем правильный цвет (не только когда showObstacles)
-                float4 col = colors.ColorGray;
-               // if (IsCellOccupied(cell, viewerLayer))
-               //     col = colors.ColorBlack;
+                // 🔥 УНИВЕРСАЛЬНАЯ СИСТЕМА: проверяем кастомный цвет
+                float4 col;
+
+                if (EntityManager.HasComponent<CellCustomColor>(cellEntity))
+                {
+                    // У клетки есть кастомный базовый цвет (радиация, зоны и т.д.)
+                    col = EntityManager.GetComponentData<CellCustomColor>(cellEntity).BaseColor;
+                }
+                else
+                {
+                    // Стандартная логика: серый или черный
+                    col = colors.ColorGray;
+                    if (IsCellOccupied(cell, viewerLayer))
+                        col = colors.ColorBlack;
+                }
 
                 EntityManager.SetComponentData(cellEntity, new URPMaterialPropertyBaseColor { Value = col });
             }
         }
         _highlightedCells.Clear();
     }
+
 
 
 

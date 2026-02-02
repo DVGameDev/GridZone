@@ -3,6 +3,17 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
+/// <summary>
+/// Тег: у клетки есть кастомный базовый цвет
+/// УНИВЕРСАЛЬНАЯ система - можно использовать для любых раскрасок
+/// </summary>
+public struct CellCustomColor : IComponentData
+{
+    public float4 BaseColor; // Базовый цвет клетки (не серый)
+}
+
+
+
 // Компонент-событие для смены режима из UI
 public struct UIActionRequest : IComponentData
 {

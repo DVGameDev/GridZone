@@ -154,12 +154,57 @@ public partial class CursorInteractionSystem : SystemBase
         {
             if (EntityManager.Exists(entity))
             {
-                float4 restoreColor = GetBaseColorForCell(entity, context);
+                // 🔥 Проверяем - подсвечена ли клетка move area
+                var coords = EntityManager.GetComponentData<GridCoordinates>(entity);
+                int index = coords.Value.x * context.GridSize.y + coords.Value.y;
+
+                float4 restoreColor;
+
+                if (index >= 0 && index < context.MapBuffer.Length)
+                {
+                    var cell = context.MapBuffer[index];
+
+                    if (cell.IsHighlighted)
+                    {
+                        // Клетка подсвечена - восстанавливаем цвет подсветки (синий/черный)
+                        bool isOccupied = false;
+                        switch (context.Layer)
+                        {
+                            case UnitLayer.Underground: isOccupied = cell.IsOccupiedUnderground; break;
+                            case UnitLayer.Ground: isOccupied = cell.IsOccupiedGround; break;
+                            case UnitLayer.Sky: isOccupied = cell.IsOccupiedSky; break;
+                        }
+
+                        Entity occupant = Entity.Null;
+                        switch (context.Layer)
+                        {
+                            case UnitLayer.Underground: occupant = cell.OccupantUnderground; break;
+                            case UnitLayer.Ground: occupant = cell.OccupantGround; break;
+                            case UnitLayer.Sky: occupant = cell.OccupantSky; break;
+                        }
+
+                        if (isOccupied && occupant != context.SelectedUnit)
+                            restoreColor = context.Colors.ColorBlack;
+                        else
+                            restoreColor = context.Colors.ColorBlue;
+                    }
+                    else
+                    {
+                        // Клетка НЕ подсвечена - восстанавливаем базовый цвет
+                        restoreColor = GetBaseColorForCell(entity, context);
+                    }
+                }
+                else
+                {
+                    restoreColor = GetBaseColorForCell(entity, context);
+                }
+
                 ecb.SetComponent(entity, new URPMaterialPropertyBaseColor { Value = restoreColor });
             }
         }
         _previousHoveredEntities.Clear();
     }
+
 
     private float4 GetBaseColorForCell(Entity cell, InteractionContext context)
     {
@@ -174,17 +219,31 @@ public partial class CursorInteractionSystem : SystemBase
 
         var data = context.MapBuffer[index];
 
-        if (context.Mode == InteractionMode.Move && GridUtils.IsCellOccupied(data, context.Layer))
-            return context.Colors.ColorBlack;
+        // 🔥 УБРАЛИ проверку IsHighlighted - она возвращала текущий цвет подсветки
 
-        if (data.IsHighlighted)
+        // 🔥 УНИВЕРСАЛЬНАЯ СИСТЕМА: проверяем кастомный цвет
+        if (EntityManager.HasComponent<CellCustomColor>(cell))
         {
-            if (context.Mode == InteractionMode.Move) return context.Colors.ColorBlue;
-            if (context.Mode == InteractionMode.Effect) return context.Colors.ColorYellow;
+            return EntityManager.GetComponentData<CellCustomColor>(cell).BaseColor;
         }
+
+        // Проверяем занятость
+        bool isOccupied = false;
+        switch (context.Layer)
+        {
+            case UnitLayer.Underground: isOccupied = data.IsOccupiedUnderground; break;
+            case UnitLayer.Ground: isOccupied = data.IsOccupiedGround; break;
+            case UnitLayer.Sky: isOccupied = data.IsOccupiedSky; break;
+        }
+
+        if (isOccupied)
+            return context.Colors.ColorBlack;
 
         return context.Colors.ColorGray;
     }
+
+
+
 
     #endregion
 
