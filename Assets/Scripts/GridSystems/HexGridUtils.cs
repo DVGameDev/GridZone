@@ -93,7 +93,7 @@ public static class HexGridUtils
     /// </summary>
     public static int HexToIndex(int2 axial, int2 gridSize)
     {
-        return axial.x * gridSize.y + axial.y;
+        return axial.y * gridSize.x + axial.x;
     }
 
     /// <summary>

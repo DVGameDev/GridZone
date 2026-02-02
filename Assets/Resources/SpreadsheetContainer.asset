@@ -31,7 +31,7 @@ MonoBehaviour:
       BaseMaxHP: 100
       BaseArmor: 5
       BaseMaxSP: 50
-      BaseRenewAP: 3
+      BaseRenewAP: 1
       BaseRenewCards: 3
       BaseHandSize: 5
       PositionX: 3
@@ -42,44 +42,6 @@ MonoBehaviour:
       FacingX: 1
       FacingZ: 0
       UnitPrefab: Paladin_Unit
-    - Id: 1
-      Class: thief
-      Faction: enemy
-      Strength: 10
-      Reaction: 10
-      BaseMaxHP: 50
-      BaseArmor: 0
-      BaseMaxSP: 50
-      BaseRenewAP: 3
-      BaseRenewCards: 2
-      BaseHandSize: 5
-      PositionX: 2
-      PositionZ: 6
-      SizeX: 2
-      SizeZ: 2
-      Layer: Ground
-      FacingX: 0
-      FacingZ: 1
-      UnitPrefab: Lich_prefab
-    - Id: 2
-      Class: wizard
-      Faction: hero
-      Strength: 5
-      Reaction: 5
-      BaseMaxHP: 50
-      BaseArmor: 0
-      BaseMaxSP: 50
-      BaseRenewAP: 4
-      BaseRenewCards: 4
-      BaseHandSize: 7
-      PositionX: 6
-      PositionZ: 2
-      SizeX: 1
-      SizeZ: 2
-      Layer: Ground
-      FacingX: 1
-      FacingZ: 0
-      UnitPrefab: Centaur_prefab
     Effects:
     - UnitID: 0
       EffectID: 1
@@ -98,46 +60,6 @@ MonoBehaviour:
       ASizeZ: 1
       Offset: 0
       EffectShapeType: 4
-      ESizeX: 1
-      ESizeZ: 1
-      EffectShapeLevel: 5
-    - UnitID: 1
-      EffectID: 2
-      EffectType: 13
-      StatusType: 0
-      Power: 3
-      Repeat: 1
-      Duration: 0
-      Charges: 0
-      TargetType: 0
-      Description: "\u0421\u0443\u0435\u0442 \u0432 \u0441\u0435\u0431\u044F \u043F\u0435\u0440\u0435\u0446
-        +%P% AP."
-      IsVisible: 0
-      AimShapeType: 0
-      ASizeX: 2
-      ASizeZ: 3
-      Offset: 1
-      EffectShapeType: 4
-      ESizeX: 2
-      ESizeZ: 2
-      EffectShapeLevel: 5
-    - UnitID: 2
-      EffectID: 3
-      EffectType: 1
-      StatusType: 0
-      Power: 10
-      Repeat: 1
-      Duration: 0
-      Charges: 0
-      TargetType: 0
-      Description: "\u041D\u0435\u0437\u0430\u0431\u044B\u0432\u0430\u0435\u043C\u044B\u0435
-        \u043E\u0449\u0443\u0449\u0435\u043D\u0438\u044F -%P% HP."
-      IsVisible: 0
-      AimShapeType: 0
-      ASizeX: 3
-      ASizeZ: 5
-      Offset: 0
-      EffectShapeType: 5
       ESizeX: 1
       ESizeZ: 1
       EffectShapeLevel: 5

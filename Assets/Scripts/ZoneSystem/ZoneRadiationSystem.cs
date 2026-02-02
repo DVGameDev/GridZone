@@ -17,6 +17,9 @@ public partial class ZoneRadiationSystem : SystemBase
         // Проверяем ZONE режим
         if (!SystemAPI.HasSingleton<ZoneModeTag>()) return;
 
+        // Проверяем существование GridMapTag
+        if (!SystemAPI.HasSingleton<GridMapTag>()) return;
+
         var mapEntity = SystemAPI.GetSingletonEntity<GridMapTag>();
         if (!EntityManager.HasBuffer<ZoneCellRadiation>(mapEntity)) return;
 

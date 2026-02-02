@@ -127,9 +127,9 @@ public partial struct HexGridSpawnerSystem : ISystem
 
         public void Execute(int index)
         {
-            // Вычисляем Axial координаты (q, r)
-            int q = index / GridSize.y;
-            int r = index % GridSize.y;
+            // Вычисляем Axial координаты (q, r) для прямоугольной области
+            int q = index % GridSize.x;
+            int r = index / GridSize.x;
 
             var instance = Instances[index];
 

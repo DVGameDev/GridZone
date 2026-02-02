@@ -127,12 +127,22 @@ public partial class GridHighlightSystem : SystemBase
     private void ClearPreviousHighlights(DynamicBuffer<GridCellElement> buffer, int2 gridSize, UnitLayer viewerLayer, bool showObstacles, GridColorConfig colors)
     {
         var config = SystemAPI.GetSingleton<GridConfig>();
+        
+        // 🔥 Проверяем ZONE режим
+        bool isZoneMode = SystemAPI.HasSingleton<ZoneModeTag>();
+        
         foreach (var cellEntity in _highlightedCells)
         {
             if (!EntityManager.Exists(cellEntity)) continue;
 
             var coords = EntityManager.GetComponentData<GridCoordinates>(cellEntity);
-            int index = GridUtils.GridToIndex(coords.Value, gridSize);
+            
+            // 🔥 ИСПРАВЛЕНИЕ: используем правильную индексацию в зависимости от layout
+            int index;
+            if (config.Layout == GridLayoutType.HexFlatTop)
+                index = HexGridUtils.HexToIndex(coords.Value, gridSize);
+            else
+                index = GridUtils.GridToIndex(coords.Value, gridSize);
 
             if (index >= 0 && index < buffer.Length)
             {
@@ -152,7 +162,7 @@ public partial class GridHighlightSystem : SystemBase
                 {
                     // Стандартная логика: серый или черный
                     col = colors.ColorGray;
-                    if (IsCellOccupied(cell, viewerLayer))
+                    if (showObstacles && IsCellOccupied(cell, viewerLayer))
                         col = colors.ColorBlack;
                 }
 
@@ -167,6 +177,7 @@ public partial class GridHighlightSystem : SystemBase
 
     private void HighlightAim(DynamicBuffer<GridCellElement> buffer, int2 gridSize, int2 anchor, int2 size, int2 facing, AimShapeConfig aimShape, EffectShapeConfig effectShape, GridColorConfig colors)
     {
+        var config = SystemAPI.GetSingleton<GridConfig>();
         NativeList<int2> offsets = new NativeList<int2>(Allocator.Temp);
         GridShapeHelper.GetAimOffsets(aimShape, effectShape, size, facing, ref offsets);
 
@@ -175,7 +186,13 @@ public partial class GridHighlightSystem : SystemBase
             int2 pos = anchor + offset;
             if (pos.x >= 0 && pos.x < gridSize.x && pos.y >= 0 && pos.y < gridSize.y)
             {
-                int index = pos.x * gridSize.y + pos.y;
+                // 🔥 ИСПРАВЛЕНИЕ: используем правильную индексацию
+                int index;
+                if (config.Layout == GridLayoutType.HexFlatTop)
+                    index = HexGridUtils.HexToIndex(pos, gridSize);
+                else
+                    index = pos.x * gridSize.y + pos.y;
+                    
                 var cell = buffer[index];
                 cell.IsHighlighted = true;
                 buffer[index] = cell;
