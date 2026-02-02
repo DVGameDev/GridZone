@@ -79,3 +79,48 @@ public struct ZoneSpawnerComponent : IComponentData
     public int2 GridSize;
     public float HexSize;
 }
+
+/// <summary>
+/// Конфиг генерации событий на карте
+/// </summary>
+public struct ZoneEventConfig : IComponentData
+{
+    // Вероятности генерации (0-1)
+    public float AnomalyProbability;
+    public float FightProbability;
+    public float EventProbability;
+}
+
+/// <summary>
+/// Тип события на карте
+/// </summary>
+public enum ZoneEventType : byte
+{
+    None = 0,
+    Anomaly = 1,   // Аномалия
+    Fight = 2,     // Драка
+    Event = 3      // Ивент
+}
+
+/// <summary>
+/// Событие на клетке карты
+/// </summary>
+public struct ZoneEventData : IComponentData
+{
+    public ZoneEventType EventType;
+    public int Visibility;      // 0-3: на каком расстоянии обнаруживается
+    public bool IsDiscovered;   // Обнаружено ли героем
+    public int2 GridPos;        // Позиция на карте
+}
+
+/// <summary>
+/// Буфер всех событий на карте (на GridMap entity)
+/// </summary>
+public struct ZoneEventElement : IBufferElementData
+{
+    public Entity EventEntity;
+    public int2 GridPos;
+    public ZoneEventType EventType;
+    public int Visibility;
+    public bool IsDiscovered;
+}

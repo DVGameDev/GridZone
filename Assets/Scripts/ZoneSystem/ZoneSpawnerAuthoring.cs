@@ -45,6 +45,14 @@ public class ZoneSpawnerAuthoring : MonoBehaviour
     public int RedSizeMin = 1;
     public int RedSizeMax = 3;
 
+    [Header("Map Events Generation")]
+    [Tooltip("Вероятность генерации аномалии на клетке")]
+    [Range(0f, 1f)] public float AnomalyProbability = 0.05f;
+    [Tooltip("Вероятность генерации драки на клетке")]
+    [Range(0f, 1f)] public float FightProbability = 0.03f;
+    [Tooltip("Вероятность генерации ивента на клетке")]
+    [Range(0f, 1f)] public float EventProbability = 0.02f;
+
     [Header("Grid Highlight Colors (для совместимости)")]
     [Tooltip("Эти цвета используются системами подсветки")]
     public Color ColorGray = new Color(0.5f, 0.5f, 0.5f, 0f);
@@ -100,6 +108,14 @@ public class ZoneSpawnerAuthoring : MonoBehaviour
                 RedProbability = authoring.RedProbability,
                 RedSizeMin = authoring.RedSizeMin,
                 RedSizeMax = authoring.RedSizeMax
+            });
+
+            // 3.5. Конфиг событий
+            AddComponent(entity, new ZoneEventConfig
+            {
+                AnomalyProbability = authoring.AnomalyProbability,
+                FightProbability = authoring.FightProbability,
+                EventProbability = authoring.EventProbability
             });
 
 
