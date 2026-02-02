@@ -1,0 +1,116 @@
+/* ===================================================== */
+/* =================== CURRENT AP ====================== */
+/* ===================================================== */
+
+.ap-counter {
+position: absolute;
+left: 16px;
+bottom: 72px;
+width: 90px; /* 🔹 Увеличено с 80px до 90px */
+height: 48px;
+background-color: rgba(40, 120, 255, 0.85);
+color: white;
+border-radius: 12px;
+font-size: 28px; /* 🔹 Можно уменьшить с 32px до 28px если нужно */
+-unity-font-style: bold;
+-unity-text-align: middle-center;
+}
+
+
+/* ===================================================== */
+/* =================== ROUND ELEMENTS ================== */
+/* ===================================================== */
+
+.round-label {
+position: absolute;
+right: 16px;
+bottom: 256px;
+background-color: rgba(0, 0, 0, 0.65);
+color: white;
+padding: 4px 12px;
+border-radius: 6px;
+font-size: 18px;
+-unity-font-style: bold;
+-unity-text-align: middle-center;
+}
+
+.round-counter {
+position: absolute;
+right: 16px;
+bottom: 220px;
+width: 60px;
+height: 32px;
+background-color: rgba(0, 0, 0, 0.75);
+color: white;
+border-radius: 8px;
+font-size: 24px;
+-unity-font-style: bold;
+-unity-text-align: middle-center;
+}
+
+/* ===================================================== */
+/* =================== END TURN BUTTON ================= */
+/* ===================================================== */
+
+.end-turn-button {
+position: absolute;
+right: 16px;
+bottom: 100px;
+width: 100px;
+height: 100px;
+background-color: rgba(200, 50, 50, 0.9);
+color: white;
+border-radius: 16px;
+font-size: 16px;
+-unity-font-style: bold;
+border-width: 0;
+}
+
+.end-turn-button:hover {
+background-color: rgba(220, 70, 70, 0.95);
+}
+
+.end-turn-button:active {
+background-color: rgba(180, 40, 40, 1);
+}
+/* ===================================================== */
+/* =================== ACTION BAR ====================== */
+/* ===================================================== */
+
+.action-bar {
+    position: absolute;
+    left: 16px;
+    bottom: 140px; /* Над AP счетчиком */
+    flex-direction: column; /* Вертикальный стек кнопок */
+    justify-content: flex-end;
+}
+
+.action-button {
+    width: 90px;
+    height: 48px;
+    margin-bottom: 8px; /* Отступ между кнопками */
+    border-radius: 8px;
+    font-size: 16px;
+    -unity-font-style: bold;
+    color: white;
+    border-width: 0;
+    -unity-text-align: middle-center;
+}
+
+.move-btn {
+    background-color: rgba(46, 204, 113, 0.9); /* Green */
+}
+.move-btn:hover { background-color: rgba(46, 204, 113, 1); }
+.move-btn:active { background-color: rgba(39, 174, 96, 1); }
+
+.effect-btn {
+    background-color: rgba(155, 89, 182, 0.9); /* Purple */
+}
+.effect-btn:hover { background-color: rgba(155, 89, 182, 1); }
+.effect-btn:active { background-color: rgba(142, 68, 173, 1); }
+
+/* Опционально: стиль для активной кнопки (selected) можно добавить программно */
+.action-button-active {
+    border-width: 2px;
+    border-color: yellow;
+}
