@@ -196,13 +196,13 @@ public static class UnitActionHelper
     /// Проверка блокировки курсора
     /// </summary>
     public static bool IsCursorBlocked(
-        Entity selectedUnit,
-        int2 hitCoords,
-        NativeList<int2> cursorOffsets,
-        DynamicBuffer<GridCellElement> mapBuffer,
-        int2 gridSize,
-        UnitLayer layer,
-        GridConfig config)
+     Entity selectedUnit,
+     int2 hitCoords,
+     NativeList<int2> cursorOffsets,
+     DynamicBuffer<GridCellElement> mapBuffer,
+     int2 gridSize,
+     UnitLayer layer,
+     GridConfig config)
     {
         foreach (var offset in cursorOffsets.AsArray())
         {
@@ -211,15 +211,22 @@ public static class UnitActionHelper
             if (!GridUtils.IsInBounds(targetPos, gridSize))
                 return true;
 
-            int index = GridUtils.GridToIndex(targetPos, gridSize);
+            int index;
+            if (config.Layout == GridLayoutType.HexFlatTop)
+                index = HexGridUtils.HexToIndex(targetPos, gridSize);
+            else
+                index = GridUtils.GridToIndex(targetPos, gridSize);
+
             var cell = mapBuffer[index];
 
             if ((GridUtils.IsCellOccupied(cell, layer) && GridUtils.GetOccupant(cell, layer) != selectedUnit)
                 || !cell.IsHighlighted)
                 return true;
         }
+
         return false;
     }
+
     /// <summary>
     /// Универсальный поворот юнита (Quad + Hex)
     /// </summary>

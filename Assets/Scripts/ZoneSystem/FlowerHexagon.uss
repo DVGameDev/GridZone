@@ -1,0 +1,55 @@
+.flower-container {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  margin: 20px;
+}
+
+.hexagon {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background-color: #ccc;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.hex-label {
+  color: #000;
+  font-size: 14px;
+}
+
+/* Центральный гекс */
+#hex-0 {
+  left: 120px;
+  top: 120px;
+}
+
+/* Окружающие гексы */
+#hex-1 {
+  left: 180px;
+  top: 90px;
+}
+#hex-2 {
+  left: 180px;
+  top: 150px;
+}
+#hex-3 {
+  left: 120px;
+  top: 180px;
+}
+#hex-4 {
+  left: 60px;
+  top: 150px;
+}
+#hex-5 {
+  left: 60px;
+  top: 90px;
+}
+#hex-6 {
+  left: 120px;
+  top: 60px;
+}

@@ -166,9 +166,10 @@ public partial struct ZoneSpawnerSystem : ISystem
 
         public void Execute(int index)
         {
-            // Axial координаты для прямоугольной области
-            int q = index % GridSize.x;
-            int r = index / GridSize.x;
+            // 🔥 Axial координаты (как в HexGridSpawnerSystem)
+            int q = index % GridSize.x;  // ← ПРАВИЛЬНО
+            int r = index / GridSize.x;  // ← ПРАВИЛЬНО
+
 
             var instance = Instances[index];
 

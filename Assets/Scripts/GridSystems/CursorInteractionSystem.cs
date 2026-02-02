@@ -156,7 +156,18 @@ public partial class CursorInteractionSystem : SystemBase
             {
                 // 🔥 Проверяем - подсвечена ли клетка move area
                 var coords = EntityManager.GetComponentData<GridCoordinates>(entity);
-                int index = coords.Value.x * context.GridSize.y + coords.Value.y;
+
+                // 🔥 Универсальная индексация
+                int index;
+                if (context.Config.Layout == GridLayoutType.HexFlatTop)
+                {
+                    index = HexGridUtils.HexToIndex(coords.Value, context.GridSize);
+                }
+                else
+                {
+                    index = coords.Value.x * context.GridSize.y + coords.Value.y;
+                }
+
 
                 float4 restoreColor;
 
@@ -212,35 +223,49 @@ public partial class CursorInteractionSystem : SystemBase
             return context.Colors.ColorGray;
 
         int2 c = EntityManager.GetComponentData<GridCoordinates>(cell).Value;
-        int index = c.x * context.GridSize.y + c.y;
+
+        int index;
+        if (context.Config.Layout == GridLayoutType.HexFlatTop)
+            index = HexGridUtils.HexToIndex(c, context.GridSize);
+        else
+            index = c.x * context.GridSize.y + c.y;
 
         if (index >= context.MapBuffer.Length)
             return context.Colors.ColorGray;
 
         var data = context.MapBuffer[index];
 
-        // 🔥 УБРАЛИ проверку IsHighlighted - она возвращала текущий цвет подсветки
+        // 🔥 ДЛЯ MOVE-РЕЖИМА: при восстановлении базового цвета
+        if (context.Mode == InteractionMode.Move)
+        {
+            // если клетка занята – черный
+            if (GridUtils.IsCellOccupied(data, context.Layer))
+                return context.Colors.ColorBlack;
 
-        // 🔥 УНИВЕРСАЛЬНАЯ СИСТЕМА: проверяем кастомный цвет
+            // если клетка подсвечена (входит в move area) – синий
+            if (data.IsHighlighted)
+                return context.Colors.ColorBlue;
+
+            // иначе базовый (серый или кастомный)
+            if (EntityManager.HasComponent<CellCustomColor>(cell))
+                return EntityManager.GetComponentData<CellCustomColor>(cell).BaseColor;
+
+            return context.Colors.ColorGray;
+        }
+
+        // EFFECT и остальные как раньше, только с кастомным цветом
+        if (data.IsHighlighted)
+        {
+            if (context.Mode == InteractionMode.Effect)
+                return context.Colors.ColorYellow;
+        }
+
         if (EntityManager.HasComponent<CellCustomColor>(cell))
-        {
             return EntityManager.GetComponentData<CellCustomColor>(cell).BaseColor;
-        }
-
-        // Проверяем занятость
-        bool isOccupied = false;
-        switch (context.Layer)
-        {
-            case UnitLayer.Underground: isOccupied = data.IsOccupiedUnderground; break;
-            case UnitLayer.Ground: isOccupied = data.IsOccupiedGround; break;
-            case UnitLayer.Sky: isOccupied = data.IsOccupiedSky; break;
-        }
-
-        if (isOccupied)
-            return context.Colors.ColorBlack;
 
         return context.Colors.ColorGray;
     }
+
 
 
 
@@ -420,11 +445,20 @@ public partial class CursorInteractionSystem : SystemBase
         {
             int tx = hitCoords.x + offset.x;
             int ty = hitCoords.y + offset.y;
-
             if (tx < 0 || tx >= context.GridSize.x || ty < 0 || ty >= context.GridSize.y)
                 continue;
 
-            int index = tx * context.GridSize.y + ty;
+            // 🔥 Универсальная индексация
+            int index;
+            if (context.Config.Layout == GridLayoutType.HexFlatTop)
+            {
+                index = HexGridUtils.HexToIndex(new int2(tx, ty), context.GridSize);
+            }
+            else
+            {
+                index = tx * context.GridSize.y + ty;
+            }
+
             var cell = context.MapBuffer[index];
 
             _previousHoveredEntities.Add(cell.CellEntity);
@@ -513,7 +547,17 @@ public partial class CursorInteractionSystem : SystemBase
             if (tx < 0 || tx >= context.GridSize.x || ty < 0 || ty >= context.GridSize.y)
                 continue;
 
-            int index = tx * context.GridSize.y + ty;
+            // 🔥 Универсальная индексация
+            int index;
+            if (context.Config.Layout == GridLayoutType.HexFlatTop)
+            {
+                index = HexGridUtils.HexToIndex(new int2(tx, ty), context.GridSize);
+            }
+            else
+            {
+                index = tx * context.GridSize.y + ty;
+            }
+
             var cell = context.MapBuffer[index];
 
             if (cell.IsOccupiedGround && cell.OccupantGround != Entity.Null)
