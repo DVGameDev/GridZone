@@ -34,10 +34,10 @@ MonoBehaviour:
       BaseRenewAP: 1
       BaseRenewCards: 3
       BaseHandSize: 5
-      PositionX: 10
+      PositionX: 4
       PositionZ: 1
-      SizeX: 1
-      SizeZ: 1
+      SizeX: 0
+      SizeZ: 0
       Layer: Ground
       FacingX: 0
       FacingZ: 1

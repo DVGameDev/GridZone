@@ -1,6 +1,11 @@
 <engine:UXML xmlns:engine="UnityEngine.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/Scripts/ZoneSystem/FlowerHexagon.uss?fileID=7433441132597879392&amp;guid=3e0e79373101e0d44bfc830b97552405&amp;type=3#FlowerHexagon"/>
     
+    <!-- КНОПКА ОТЛАДКИ ДЛЯ РАДИАЦИИ -->
+    <engine:VisualElement name="debug-radiation-container" class="debug-btn-container debug-btn-left">
+        <engine:Button name="btn-debug-radiation" text="🔍 Show All Radiation" class="debug-btn"/>
+    </engine:VisualElement>
+    
     <!-- ЛЕВЫЙ ЦВЕТОЧЕК: радиация -->
     <engine:VisualElement name="flower-left" class="flower-container flower-left">
         <engine:VisualElement name="left-hex-0" class="hexagon hex-pos-0">
@@ -24,6 +29,11 @@
         <engine:VisualElement name="left-hex-6" class="hexagon hex-pos-6">
             <engine:Label name="left-label-6" text="6" class="hex-label"/>
         </engine:VisualElement>
+    </engine:VisualElement>
+    
+    <!-- КНОПКА ОТЛАДКИ ДЛЯ СОБЫТИЙ -->
+    <engine:VisualElement name="debug-events-container" class="debug-btn-container debug-btn-right">
+        <engine:Button name="btn-debug-events" text="🔍 Show All Events" class="debug-btn"/>
     </engine:VisualElement>
     
     <!-- ПРАВЫЙ ЦВЕТОЧЕК: детектор аномалий -->

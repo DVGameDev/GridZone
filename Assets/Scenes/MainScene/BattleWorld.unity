@@ -304,7 +304,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 672da2fcaf950ca4b8b630256cb584a5, type: 2}
+  - {fileID: 2100000, guid: 547578b7f9f237f4d94c3a23641e2b1a, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -345,8 +345,8 @@ Transform:
   m_GameObject: {fileID: 506392309}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 15, y: -0, z: 17}
-  m_LocalScale: {x: 4, y: 1, z: 4.5}
+  m_LocalPosition: {x: 18.19, y: -0.2, z: 21.22}
+  m_LocalScale: {x: 4.5, y: 1, z: 4.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -382,8 +382,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ZoneSpawnerAuthoring
   EnableZoneMode: 1
   HexCellPrefab: {fileID: 5866980474319463971, guid: 3bdc3ab88fe0204419208f930ef16e9f, type: 3}
-  Width: 20
-  Height: 20
+  Width: 25
+  Height: 25
   HexSize: 1
   LevelGreen: 0
   LevelYellow: 5
@@ -402,7 +402,10 @@ MonoBehaviour:
   RedProbability: 0.05
   RedSizeMin: 1
   RedSizeMax: 3
-  ColorGray: {r: 0.5, g: 0.5, b: 0.5, a: 0.105882354}
+  AnomalyProbability: 0.05
+  FightProbability: 0.03
+  EventProbability: 0.02
+  ColorGray: {r: 0, g: 0, b: 0, a: 0.6039216}
   ColorBlue: {r: 0, g: 0, b: 1, a: 0.1254902}
   ColorBlack: {r: 0, g: 0, b: 0, a: 0.8}
   ColorPurple: {r: 0.6, g: 0, b: 0.8, a: 0.5}

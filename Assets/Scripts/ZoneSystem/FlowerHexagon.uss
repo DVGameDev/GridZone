@@ -75,3 +75,37 @@
 .detector-btn-power {
   border-color: rgba(255, 150, 50, 0.8);
 }
+
+/* Кнопки отладки */
+.debug-btn-container {
+  position: absolute;
+  width: 200px;
+  height: 30px;
+}
+
+.debug-btn-left {
+  left: 70px;
+  top: -10px;
+}
+
+.debug-btn-right {
+  right: 70px;
+  top: -10px;
+}
+
+.debug-btn {
+  width: 200px;
+  height: 30px;
+  font-size: 12px;
+  -unity-font-style-and-weight: bold;
+  border-radius: 5px;
+  border-width: 2px;
+  border-color: rgba(255, 100, 255, 0.6);
+  background-color: rgba(50, 20, 50, 0.8);
+  color: #fff;
+}
+
+.debug-btn:hover {
+  background-color: rgba(80, 40, 80, 0.9);
+  border-color: rgba(255, 150, 255, 0.8);
+}

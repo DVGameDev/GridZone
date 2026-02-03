@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
@@ -18,6 +18,15 @@ public class OrbitCamera : MonoBehaviour
     public float ZoomSpeed = 5f;
     public float MinDistance = 5f;
     public float MaxDistance = 50f;
+    public float MoveSpeed = 10f;
+
+    [Header("Настройки камеры")]
+    [Tooltip("Увеличить для отображения всей сетки при виде сверху")]
+    public float FarClipPlane = 1000f;
+    [Tooltip("Использовать ортографическую проекцию (рекомендуется для вида сверху)")]
+    public bool UseOrthographic = false;
+    [Tooltip("Размер ортографической камеры")]
+    public float OrthographicSize = 35f;
 
     private float currentRotation = 0f;
 
@@ -32,6 +41,23 @@ public class OrbitCamera : MonoBehaviour
         // Получаем ссылки на устройства ввода
         keyboard = Keyboard.current;
         mouse = Mouse.current;
+        
+        // 🔥 ИСПРАВЛЕНИЕ: настройка камеры для корректного отображения всей сетки
+        Camera cam = GetComponent<Camera>();
+        if (cam != null)
+        {
+            // Увеличиваем дальность отрисовки
+            cam.farClipPlane = FarClipPlane;
+            
+            // Опционально: переключаем на ортографическую проекцию
+            if (UseOrthographic)
+            {
+                cam.orthographic = true;
+                cam.orthographicSize = OrthographicSize;
+            }
+            
+            Debug.Log($"[OrbitCamera] Camera setup: farClip={cam.farClipPlane}, orthographic={cam.orthographic}");
+        }
 
         UpdateCameraPosition();
     }
@@ -41,6 +67,8 @@ public class OrbitCamera : MonoBehaviour
         HandleRotation();
         HandleZoom();
         UpdateCameraPosition();
+        HandleMovement();
+        
     }
 
     void HandleRotation()
@@ -50,14 +78,28 @@ public class OrbitCamera : MonoBehaviour
         float horizontal = 0f;
 
         // A - влево, D - вправо
-        if (keyboard.aKey.isPressed)
+        if (keyboard.qKey.isPressed)
             horizontal = -1f;
-        if (keyboard.dKey.isPressed)
+        if (keyboard.eKey.isPressed)
             horizontal = 1f;
 
         currentRotation += horizontal * RotationSpeed * Time.deltaTime;
     }
+    void HandleMovement()
+    {
+        if (keyboard == null) return;
 
+        Vector3 move = Vector3.zero;
+
+        if (keyboard.wKey.isPressed) move.z += 1f;
+        if (keyboard.sKey.isPressed) move.z -= 1f;
+        if (keyboard.aKey.isPressed) move.x -= 1f;
+        if (keyboard.dKey.isPressed) move.x += 1f;
+
+        move = move.normalized * MoveSpeed * Time.deltaTime;
+
+        Target += move;
+    }
     void HandleZoom()
     {
         if (mouse == null) return;
@@ -72,6 +114,7 @@ public class OrbitCamera : MonoBehaviour
 
     void UpdateCameraPosition()
     {
+        /*
         float radians = currentRotation * Mathf.Deg2Rad;
         float angleRadians = Angle * Mathf.Deg2Rad;
 
@@ -83,6 +126,10 @@ public class OrbitCamera : MonoBehaviour
 
         transform.position = Target + offset;
         transform.LookAt(Target);
+        */
+        transform.position = new Vector3(Target.x, Height, Target.z);
+        transform.rotation = Quaternion.Euler(90f, 0f, 0f); // смотри строго вниз
+        
     }
 
     void OnDrawGizmos()

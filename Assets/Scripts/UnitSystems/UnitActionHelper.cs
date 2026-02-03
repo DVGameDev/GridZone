@@ -48,11 +48,13 @@ public static class UnitActionHelper
         UnitLayer layer,
         GridConfig config)
     {
-        if (!GridUtils.IsInBounds(targetPos, gridSize))
+        // 🔥 ИСПРАВЛЕНО: используем HexGridUtils для axial координат
+        if (!HexGridUtils.IsHexInBounds(targetPos, gridSize))
             return false;
 
-        int oldIndex = GridUtils.GridToIndex(oldPos, gridSize);
-        int targetIndex = GridUtils.GridToIndex(targetPos, gridSize);
+        // 🔥 ИСПРАВЛЕНО: используем HexGridUtils для Hex координат
+        int oldIndex = HexGridUtils.HexToIndex(oldPos, gridSize);
+        int targetIndex = HexGridUtils.HexToIndex(targetPos, gridSize);
 
         var oldCell = map[oldIndex];
         var targetCell = map[targetIndex];
@@ -177,10 +179,22 @@ public static class UnitActionHelper
                 else
                     cellPos = new int2(anchor.x + x, anchor.y - y);
 
-                if (!GridUtils.IsInBounds(cellPos, gridSize))
+                // 🔥 ИСПРАВЛЕНО: проверяем bounds в зависимости от layout
+                bool inBounds;
+                if (config.Layout == GridLayoutType.HexFlatTop)
+                    inBounds = HexGridUtils.IsHexInBounds(cellPos, gridSize);
+                else
+                    inBounds = GridUtils.IsInBounds(cellPos, gridSize);
+                
+                if (!inBounds)
                     return false;
 
-                int index = GridUtils.GridToIndex(cellPos, gridSize);
+                // 🔥 ИСПРАВЛЕНО: добавлена проверка layout
+                int index;
+                if (config.Layout == GridLayoutType.HexFlatTop)
+                    index = HexGridUtils.HexToIndex(cellPos, gridSize);
+                else
+                    index = GridUtils.GridToIndex(cellPos, gridSize);
                 var cell = map[index];
                 Entity occupant = GridUtils.GetOccupant(cell, layer);
 
@@ -208,7 +222,14 @@ public static class UnitActionHelper
         {
             int2 targetPos = hitCoords + offset;
 
-            if (!GridUtils.IsInBounds(targetPos, gridSize))
+            // 🔥 ИСПРАВЛЕНО: проверяем bounds в зависимости от layout
+            bool inBounds;
+            if (config.Layout == GridLayoutType.HexFlatTop)
+                inBounds = HexGridUtils.IsHexInBounds(targetPos, gridSize);
+            else
+                inBounds = GridUtils.IsInBounds(targetPos, gridSize);
+                
+            if (!inBounds)
                 return true;
 
             int index;

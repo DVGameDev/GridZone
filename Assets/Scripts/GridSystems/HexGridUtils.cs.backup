@@ -43,19 +43,19 @@ public static class HexGridUtils
     /// <summary>
     /// Округление дробных hex координат до целых (Axial)
     /// </summary>
-    // odd-q axial -> offset (ИСПРАВЛЕНО с odd-r на odd-q)
+    // odd-r axial -> offset
     public static int2 AxialToOffset(int2 axial)
     {
-        int col = axial.x;
-        int row = axial.y + (axial.x >> 1);
+        int col = axial.x + (axial.y >> 1);
+        int row = axial.y;
         return new int2(col, row);
     }
 
-    // odd-q offset -> axial (ИСПРАВЛЕНО с odd-r на odd-q)
+    // odd-r offset -> axial
     public static int2 OffsetToAxial(int2 offset)
     {
-        int q = offset.x;
-        int r = offset.y - (offset.x >> 1);
+        int q = offset.x - (offset.y >> 1);
+        int r = offset.y;
         return new int2(q, r);
     }
     public static bool IsOffsetInBounds(int2 offset, int2 gridSize)
@@ -137,16 +137,13 @@ public static class HexGridUtils
     }
 
     /// <summary>
-    /// Проверка, находится ли hex в пределах сетки (odd-q)
-    /// ИСПРАВЛЕНО: проверяем offset координаты, а не создаём ромб
+    /// Проверка, находится ли hex в пределах сетки
     /// </summary>
     public static bool IsHexInBounds(int2 axial, int2 gridSize)
     {
-        // Преобразуем axial в offset координаты
         int col = axial.x;
         int row = axial.y + (axial.x >> 1);
 
-        // Проверяем, что offset координаты в пределах прямоугольной сетки
         return col >= 0 && col < gridSize.x &&
                row >= 0 && row < gridSize.y;
     }

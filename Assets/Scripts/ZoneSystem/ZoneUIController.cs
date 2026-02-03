@@ -22,6 +22,8 @@ public class FlowerHexagonController : MonoBehaviour
 
     private Button _btnMode;
     private Button _btnPower;
+    private Button _btnDebugRadiation;
+    private Button _btnDebugEvents;
 
     // ── cached ECS queries ────────────────────────────────────────
     private EntityManager _em;
@@ -36,6 +38,14 @@ public class FlowerHexagonController : MonoBehaviour
     private enum DetectorMode { Off, MultiCell, ArcMode }
     private DetectorMode _mode = DetectorMode.Off;
     private int _power = 1; // 1..6
+    
+    // ── отслеживание движения для обновления ОДИН РАЗ ───────────────
+    private bool _wasMovingLastFrame = false;
+    private int2 _lastHeroPos = new int2(-9999, -9999);
+    
+    // ── флаги отладки ──────────────────────────────────────────────
+    private bool _debugRadiationEnabled = false;
+    private bool _debugEventsEnabled = false;
 
     // ── направления цветочка (индекс hex → axial offset) ──────────
     // 0=центр, 1=E, 2=SE, 3=S, 4=W, 5=NW, 6=N(верх)
@@ -81,6 +91,13 @@ public class FlowerHexagonController : MonoBehaviour
 
         _btnMode.clicked  += OnModeButtonClick;
         _btnPower.clicked += OnPowerButtonClick;
+        
+        // 🔥 Кнопки отладки
+        _btnDebugRadiation = root.Q<Button>("btn-debug-radiation");
+        _btnDebugEvents = root.Q<Button>("btn-debug-events");
+        
+        _btnDebugRadiation.clicked += OnDebugRadiationClick;
+        _btnDebugEvents.clicked += OnDebugEventsClick;
 
         UpdateButtonLabels();
 
@@ -100,16 +117,30 @@ public class FlowerHexagonController : MonoBehaviour
 
         int2 heroPos;
         if (!TryGetHeroPos(out heroPos)) return;
+        
+        bool isMovingNow = false;
         using (var moveEntities = _moveQuery.ToEntityArray(Allocator.Temp))
         {
-            if (moveEntities.Length == 0)
-                return;
-            var move = _em.GetComponentData<MoveCommand>(moveEntities[0]);
-            if (!move.IsMoving)
-                return;
+            if (moveEntities.Length > 0)
+            {
+                var move = _em.GetComponentData<MoveCommand>(moveEntities[0]);
+                isMovingNow = move.IsMoving;
+            }
         }
-        UpdateLeftFlower(heroPos);
-        UpdateRightFlower(heroPos);
+
+        // 🔥 ИСПРАВЛЕНО: обновляем ОДИН РАЗ когда юнит ОСТАНОВИЛСЯ
+        // или когда изменились координаты (телепорт/спавн)
+        bool justStopped = _wasMovingLastFrame && !isMovingNow;
+        bool positionChanged = !heroPos.Equals(_lastHeroPos);
+        
+        if (justStopped || (positionChanged && !isMovingNow))
+        {
+            UpdateLeftFlower(heroPos);
+            UpdateRightFlower(heroPos);
+            _lastHeroPos = heroPos;
+        }
+        
+        _wasMovingLastFrame = isMovingNow;
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -135,7 +166,111 @@ public class FlowerHexagonController : MonoBehaviour
         UpdateRightFlower(heroPos);
     }
 
-    void UpdateButtonLabels()
+    // ══════════════════════════════════════════════════════════════
+    //  КНОПКИ ОТЛАДКИ
+    // ══════════════════════════════════════════════════════════════
+    void OnDebugRadiationClick()
+    {
+        _debugRadiationEnabled = !_debugRadiationEnabled;
+        
+        if (_debugRadiationEnabled)
+        {
+            _btnDebugRadiation.text = "🔒 Hide All Radiation";
+            //RevealAllRadiation();
+        }
+        else
+        {
+            _btnDebugRadiation.text = "🔍 Show All Radiation";
+            // НЕ скрываем уже открытые клетки!
+        }
+    }
+
+    void OnDebugEventsClick()
+    {
+        _debugEventsEnabled = !_debugEventsEnabled;
+        
+        if (_debugEventsEnabled)
+        {
+            _btnDebugEvents.text = "🔒 Hide All Events";
+            //RevealAllEvents();
+        }
+        else
+        {
+            _btnDebugEvents.text = "🔍 Show All Events";
+            // НЕ скрываем уже открытые события!
+        }
+    }
+    /*
+    void RevealAllRadiation()
+    {
+        if (!SystemAPI.HasSingleton<GridMapTag>()) return;
+        
+        var mapEntity = SystemAPI.GetSingletonEntity<GridMapTag>();
+        if (!_em.HasBuffer<ZoneCellRadiation>(mapEntity)) return;
+        
+        var radiationBuffer = _em.GetBuffer<ZoneCellRadiation>(mapEntity);
+        var radiationConfig = SystemAPI.GetSingleton<ZoneRadiationConfig>();
+        
+        for (int i = 0; i < radiationBuffer.Length; i++)
+        {
+            var cell = radiationBuffer[i];
+            
+            // Определяем цвет по уровню радиации
+            float4 cellColor;
+            switch (cell.RadiationLevel)
+            {
+                case 0: cellColor = radiationConfig.ColorGreen; break;
+                case 5: cellColor = radiationConfig.ColorYellow; break;
+                case 10: cellColor = radiationConfig.ColorOrange; break;
+                case 15: cellColor = radiationConfig.ColorRed; break;
+                default: cellColor = radiationConfig.ColorYellow; break;
+            }
+            
+            // Применяем цвет
+            if (_em.HasComponent<URPMaterialPropertyBaseColor>(cell.CellEntity))
+            {
+                _em.SetComponentData(cell.CellEntity, new URPMaterialPropertyBaseColor { Value = cellColor });
+            }
+            
+            if (_em.HasComponent<CellCustomColor>(cell.CellEntity))
+            {
+                _em.SetComponentData(cell.CellEntity, new CellCustomColor { BaseColor = cellColor });
+            }
+        }
+        
+        Debug.Log("[DEBUG] Revealed all radiation!");
+    }
+
+    void RevealAllEvents()
+    {
+        if (!SystemAPI.HasSingleton<GridMapTag>()) return;
+        
+        var mapEntity = SystemAPI.GetSingletonEntity<GridMapTag>();
+        if (!_em.HasBuffer<ZoneEventElement>(mapEntity)) return;
+        
+        var eventBuffer = _em.GetBuffer<ZoneEventElement>(mapEntity);
+        
+        for (int i = 0; i < eventBuffer.Length; i++)
+        {
+            var eventElement = eventBuffer[i];
+            
+            // Помечаем как обнаруженное
+            eventElement.IsDiscovered = true;
+            eventBuffer[i] = eventElement;
+            
+            // Обновляем entity события
+            if (_em.Exists(eventElement.EventEntity))
+            {
+                var eventData = _em.GetComponentData<ZoneEventData>(eventElement.EventEntity);
+                eventData.IsDiscovered = true;
+                _em.SetComponentData(eventElement.EventEntity, eventData);
+            }
+        }
+        
+        Debug.Log($"[DEBUG] Revealed all {eventBuffer.Length} events!");
+    }
+    */
+        void UpdateButtonLabels()
     {
         switch (_mode)
         {
@@ -145,7 +280,7 @@ public class FlowerHexagonController : MonoBehaviour
         }
         _btnPower.text = $"PWR:{_power}";
     }
-
+    
     // ══════════════════════════════════════════════════════════════
     //  ЛЕВЫЙ ЦВЕТОЧЕК — радиация
     // ══════════════════════════════════════════════════════════════

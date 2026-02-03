@@ -427,7 +427,13 @@ public partial class CursorInteractionSystem : SystemBase
         }
 
         // Валидация якоря
-        int anchorIdx = hitCoords.x * context.GridSize.y + hitCoords.y;
+        // 🔥 ИСПРАВЛЕНО: добавлена проверка layout
+        int anchorIdx;
+        if (context.Config.Layout == GridLayoutType.HexFlatTop)
+            anchorIdx = HexGridUtils.HexToIndex(hitCoords, context.GridSize);
+        else
+            anchorIdx = hitCoords.x * context.GridSize.y + hitCoords.y;
+            
         if (anchorIdx < 0 || anchorIdx >= context.MapBuffer.Length || !context.MapBuffer[anchorIdx].IsHighlighted)
             data.IsValidAnchor = false;
     }
