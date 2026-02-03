@@ -1,5 +1,13 @@
-using Unity.Entities;
+﻿using Unity.Entities;
 using Unity.Mathematics;
+
+
+public struct RadiationDebugState : IComponentData
+{
+    public bool RevealAll;   // режим
+    public bool Dirty;       // нужно ли пересчитать визуал
+}
+
 
 /// <summary>
 /// Базовый серый цвет грида (прозрачный)

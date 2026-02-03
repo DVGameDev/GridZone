@@ -1,4 +1,4 @@
-using Unity.Entities;
+﻿using Unity.Entities;
 
 [UpdateInGroup(typeof(InitializationSystemGroup))]
 public partial class SingletoneBootstrapSystem : SystemBase
@@ -23,6 +23,16 @@ public partial class SingletoneBootstrapSystem : SystemBase
         UnityEngine.Debug.Log("✅ [SingletoneBootstrapSystem] Effect buffer singleton created!");
 
         Enabled = false;
+        //
+        if (SystemAPI.HasSingleton<RadiationDebugState>())
+            return;
+
+        var e = EntityManager.CreateEntity(typeof(RadiationDebugState));
+        EntityManager.SetComponentData(e, new RadiationDebugState
+        {
+            RevealAll = false,
+            Dirty = true // первичная инициализация
+        });
     }
 
     protected override void OnUpdate() { }

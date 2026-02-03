@@ -1,4 +1,4 @@
-using Unity.Burst;
+﻿using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -32,6 +32,8 @@ public partial class ZoneRadiationSystem : SystemBase
             if (unitId.ValueRO.UnitId != 0) continue;
 
             ProcessHeroCell(radiationBuffer, gridPos.ValueRO.Value, ref heroRadiation.ValueRW);
+
+
         }
     }
 
@@ -43,7 +45,7 @@ public partial class ZoneRadiationSystem : SystemBase
         if (index >= 0 && index < radiationBuffer.Length)
         {
             var cell = radiationBuffer[index];
-
+           
             if (!cell.IsVisited)
             {
                 // 🔥 Первое посещение!

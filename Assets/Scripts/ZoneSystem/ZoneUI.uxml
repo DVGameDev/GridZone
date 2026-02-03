@@ -1,4 +1,4 @@
-<engine:UXML xmlns:engine="UnityEngine.UIElements" editor-extension-mode="False">
+﻿<engine:UXML xmlns:engine="UnityEngine.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/Scripts/ZoneSystem/FlowerHexagon.uss?fileID=7433441132597879392&amp;guid=3e0e79373101e0d44bfc830b97552405&amp;type=3#FlowerHexagon"/>
     
     <!-- КНОПКА ОТЛАДКИ ДЛЯ РАДИАЦИИ -->
@@ -30,7 +30,11 @@
             <engine:Label name="left-label-6" text="6" class="hex-label"/>
         </engine:VisualElement>
     </engine:VisualElement>
-    
+    <!-- ПРОГРЕСС РАДИАЦИИ ИГРОКА -->
+<engine:VisualElement name="radiation-bar-container" class="radiation-bar-container">
+    <engine:VisualElement name="radiation-bar-fill" class="radiation-bar-fill"/>
+    <engine:Label name="radiation-bar-label" text="0%" class="radiation-bar-label"/>
+</engine:VisualElement>
     <!-- КНОПКА ОТЛАДКИ ДЛЯ СОБЫТИЙ -->
     <engine:VisualElement name="debug-events-container" class="debug-btn-container debug-btn-right">
         <engine:Button name="btn-debug-events" text="🔍 Show All Events" class="debug-btn"/>
