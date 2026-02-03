@@ -1,4 +1,5 @@
-﻿.flower-container {
+/* Контейнеры цветочков */
+.flower-container {
   position: absolute;
   width: 300px;
   height: 300px;
@@ -14,6 +15,7 @@
   top: 20px;
 }
 
+/* Хексы */
 .hexagon {
   position: absolute;
   width: 60px;
@@ -25,16 +27,13 @@
   align-items: center;
 }
 
-.hex-center-clickable {
-  cursor: pointer;
-}
-
 .hex-label {
   color: #fff;
   font-size: 14px;
   -unity-font-style-and-weight: bold;
 }
 
+/* Позиции хексов */
 .hex-pos-0 { left: 120px; top: 120px; }
 .hex-pos-1 { left: 180px; top: 90px; }
 .hex-pos-2 { left: 180px; top: 150px; }
@@ -42,3 +41,37 @@
 .hex-pos-4 { left: 60px;  top: 150px; }
 .hex-pos-5 { left: 60px;  top: 90px; }
 .hex-pos-6 { left: 120px; top: 60px; }
+
+/* Кнопки управления детектором */
+.detector-controls {
+  position: absolute;
+  right: 20px;
+  top: 340px;
+  flex-direction: row;
+  width: 300px;
+  height: 40px;
+}
+
+.detector-btn {
+  width: 145px;
+  height: 40px;
+  margin: 0 2px;
+  font-size: 14px;
+  -unity-font-style-and-weight: bold;
+  border-radius: 5px;
+  border-width: 2px;
+  background-color: rgba(40, 40, 50, 0.9);
+  color: #fff;
+}
+
+.detector-btn:hover {
+  background-color: rgba(60, 60, 80, 0.95);
+}
+
+.detector-btn-mode {
+  border-color: rgba(100, 150, 255, 0.8);
+}
+
+.detector-btn-power {
+  border-color: rgba(255, 150, 50, 0.8);
+}
