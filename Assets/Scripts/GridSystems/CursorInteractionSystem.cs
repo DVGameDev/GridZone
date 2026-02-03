@@ -8,6 +8,11 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using System;
 
+public static class HexGridRuntimeCache
+{
+    public static int2 GridSize;
+}
+
 /// <summary>
 /// Система обработки взаимодействия курсора с сеткой:
 /// - Превью курсора (цвета клеток)
@@ -41,6 +46,10 @@ public partial class CursorInteractionSystem : SystemBase
 
     protected override void OnUpdate()
     {
+
+        var config = SystemAPI.GetSingleton<GridConfig>();
+        HexGridRuntimeCache.GridSize = config.GridSize;
+
         // 1. Подготовка контекста
         var context = PrepareContext();
         if (!context.IsValid) return;

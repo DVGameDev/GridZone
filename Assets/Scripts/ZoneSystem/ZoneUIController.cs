@@ -1,139 +1,1 @@
-﻿using Unity.Entities;
-using Unity.Mathematics;
-using Unity.Collections;
-using UnityEngine;
-using UnityEngine.UIElements;
-
-public class FlowerHexagonController : MonoBehaviour
-{
-    public UIDocument uiDocument;
-
-    private VisualElement[] _leftHexes = new VisualElement[7];
-    private Label[] _leftLabels = new Label[7];
-    private VisualElement[] _rightHexes = new VisualElement[7];
-    private Label[] _rightLabels = new Label[7];
-
-    private EntityManager _entityManager;
-    private EntityQuery _zoneQuery;
-    private EntityQuery _heroQuery;
-    private EntityQuery _mapQuery;
-    private EntityQuery _gridConfigQuery;
-    private EntityQuery _radiationConfigQuery;
-
-    void Start()
-    {
-        _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-
-        var root = uiDocument.rootVisualElement;
-
-        // Кэшируем ссылки на элементы из UXML
-        for (int i = 0; i < 7; i++)
-        {
-            _leftHexes[i] = root.Q<VisualElement>($"left-hex-{i}");
-            _leftLabels[i] = root.Q<Label>($"left-label-{i}");
-            _rightHexes[i] = root.Q<VisualElement>($"right-hex-{i}");
-            _rightLabels[i] = root.Q<Label>($"right-label-{i}");
-        }
-
-        // Кэшируем ECS запросы один раз
-        _zoneQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<ZoneModeTag>());
-        _heroQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<GridCoordinates>(), ComponentType.ReadOnly<UnitIdComponent>());
-        _mapQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<GridMapTag>());
-        _gridConfigQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<GridConfig>());
-        _radiationConfigQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<ZoneRadiationConfig>());
-    }
-
-    void Update()
-    {
-        if (_zoneQuery.IsEmpty || _heroQuery.IsEmpty || _mapQuery.IsEmpty || _gridConfigQuery.IsEmpty)
-            return;
-
-        UpdateRadiationFlower();
-        UpdateInfoFlower();
-    }
-
-    // ─── Левый цветочек: радиация ─────────────────────────────────
-
-    void UpdateRadiationFlower()
-    {
-        // Находим герой (UnitId == 0)
-        var entities = _heroQuery.ToEntityArray(Allocator.Temp);
-        Entity heroEntity = Entity.Null;
-        int2 heroPos = default;
-
-        for (int i = 0; i < entities.Length; i++)
-        {
-            if (_entityManager.GetComponentData<UnitIdComponent>(entities[i]).UnitId == 0)
-            {
-                heroEntity = entities[i];
-                heroPos = _entityManager.GetComponentData<GridCoordinates>(entities[i]).Value;
-                break;
-            }
-        }
-        entities.Dispose();
-
-        if (heroEntity == Entity.Null) return;
-
-        var mapEntity = _mapQuery.GetSingletonEntity();
-        if (!_entityManager.HasBuffer<ZoneCellRadiation>(mapEntity)) return;
-
-        var buf = _entityManager.GetBuffer<ZoneCellRadiation>(mapEntity, true);
-        if (_radiationConfigQuery.IsEmpty) return;
-        var config = _radiationConfigQuery.GetSingleton<ZoneRadiationConfig>();
-        var grid = _gridConfigQuery.GetSingleton<GridConfig>();
-
-        // Порядок индексов цветочка:
-        // 0 = центр, 6 = верх (ось вверх), 1..5 по часовой от правого верхнего
-        int2[] offsets = new int2[]
-        {
-            new int2(0, 0),    // 0: центр
-            new int2(1, 0),    // 1: E
-            new int2(1, -1),   // 2: SE
-            new int2(0, -1),   // 3: S
-            new int2(-1, 0),   // 4: W
-            new int2(-1, 1),   // 5: NW
-            new int2(0, 1),    // 6: N (верх)
-        };
-
-        for (int i = 0; i < 7; i++)
-        {
-            int2 pos = heroPos + offsets[i];
-            int rad = GetRadiationAt(pos, buf, grid.GridSize);
-
-            _leftLabels[i].text = rad >= 0 ? rad.ToString() : "—";
-            _leftHexes[i].style.backgroundColor = GetRadiationColor(rad, config);
-        }
-    }
-
-    int GetRadiationAt(int2 pos, DynamicBuffer<ZoneCellRadiation> buffer, int2 gridSize)
-    {
-        if (!HexGridUtils.IsHexInBounds(pos, gridSize)) return -1;
-        int index = HexGridUtils.HexToIndex(pos, gridSize);
-        if (index < 0 || index >= buffer.Length) return -1;
-        return buffer[index].RadiationLevel;
-    }
-
-    Color GetRadiationColor(int radiation, ZoneRadiationConfig cfg)
-    {
-        if (radiation < 0) return new Color(0.3f, 0.3f, 0.3f, 0.5f); // вне карты
-
-        Color c;
-        if (radiation <= cfg.LevelGreen) c = new Color(cfg.ColorGreen.x, cfg.ColorGreen.y, cfg.ColorGreen.z);
-        else if (radiation <= cfg.LevelYellow) c = new Color(cfg.ColorYellow.x, cfg.ColorYellow.y, cfg.ColorYellow.z);
-        else if (radiation <= cfg.LevelOrange) c = new Color(cfg.ColorOrange.x, cfg.ColorOrange.y, cfg.ColorOrange.z);
-        else c = new Color(cfg.ColorRed.x, cfg.ColorRed.y, cfg.ColorRed.z);
-        c.a = 0.8f;
-        return c;
-    }
-
-    // ─── Правый цветочек: пока просто серый ───────────────────────
-
-    void UpdateInfoFlower()
-    {
-        for (int i = 0; i < 7; i++)
-        {
-            _rightLabels[i].text = "?";
-            _rightHexes[i].style.backgroundColor = new Color(0.6f, 0.6f, 0.6f, 0.4f);
-        }
-    }
-}
+﻿using Unity.Collections; using Unity.Entities; using Unity.Mathematics; using UnityEngine; using UnityEngine.UIElements;  /// <summary> /// Единый контроллер двух цветочков. /// Левый  — радиация вокруг героя. /// Правый — режимы (OffMode / MultiCell). Клик по центру — циклирует режим. /// </summary> public class FlowerHexagonController : MonoBehaviour {     public UIDocument uiDocument;      // ── cached UI refs ────────────────────────────────────────────     private VisualElement[] _leftHexes  = new VisualElement[7];     private Label[]         _leftLabels = new Label[7];     private VisualElement[] _rightHexes = new VisualElement[7];     private Label[]         _rightLabels= new Label[7];      // ── cached ECS queries ────────────────────────────────────────     private EntityManager          _em;     private EntityQuery            _zoneQuery;     private EntityQuery            _heroQuery;     private EntityQuery            _mapQuery;     private EntityQuery            _gridConfigQuery;     private EntityQuery            _radiationConfigQuery;      // ── правый цветочек: режим ────────────────────────────────────     private enum RightFlowerMode { Off, MultiCell }     private RightFlowerMode _rightMode = RightFlowerMode.Off;      // ── направления цветочка (индекс hex → axial offset) ─────────     // 0=центр, 1=E, 2=SE, 3=S, 4=W, 5=NW, 6=N(верх)     private static readonly int2[] HexOffsets = new int2[]     {         new int2( 0,  0), // 0 центр         new int2( 1,  0), // 1 E         new int2( 1, -1), // 2 SE         new int2( 0, -1), // 3 S         new int2(-1,  0), // 4 W         new int2(-1,  1), // 5 NW         new int2( 0,  1), // 6 N (верх, ось вверх)     };      // ── цвета правого цветочка ────────────────────────────────────     private static readonly Color ColorOff         = new Color(0.25f, 0.25f, 0.25f, 0.6f);     private static readonly Color ColorEmpty       = new Color(0.22f, 0.22f, 0.30f, 0.7f);     private static readonly Color ColorAnomalyFar  = new Color(0.7f, 0.2f, 0.9f, 0.7f);     private static readonly Color ColorAnomalyMid  = new Color(0.9f, 0.5f, 0.1f, 0.8f);     private static readonly Color ColorAnomalyNear = new Color(1.0f, 0.15f, 0.15f, 0.9f);     private static readonly Color ColorCenterOff   = new Color(0.3f, 0.3f, 0.3f, 0.7f);     private static readonly Color ColorCenterOn    = new Color(0.2f, 0.5f, 0.9f, 0.8f);      private const int MAX_RAY_DIST = 50;      void Start()     {         _em = World.DefaultGameObjectInjectionWorld.EntityManager;          var root = uiDocument.rootVisualElement;         for (int i = 0; i < 7; i++)         {             _leftHexes[i]   = root.Q<VisualElement>($"left-hex-{i}");             _leftLabels[i]  = root.Q<Label>($"left-label-{i}");             _rightHexes[i]  = root.Q<VisualElement>($"right-hex-{i}");             _rightLabels[i] = root.Q<Label>($"right-label-{i}");         }          _rightHexes[0].RegisterCallback<ClickEvent>(OnRightCenterClick);          _zoneQuery            = _em.CreateEntityQuery(ComponentType.ReadOnly<ZoneModeTag>());         _heroQuery            = _em.CreateEntityQuery(ComponentType.ReadOnly<GridCoordinates>(), ComponentType.ReadOnly<UnitIdComponent>());         _mapQuery             = _em.CreateEntityQuery(ComponentType.ReadOnly<GridMapTag>());         _gridConfigQuery      = _em.CreateEntityQuery(ComponentType.ReadOnly<GridConfig>());         _radiationConfigQuery = _em.CreateEntityQuery(ComponentType.ReadOnly<ZoneRadiationConfig>());     }      void Update()     {         if (_zoneQuery.IsEmpty || _heroQuery.IsEmpty || _mapQuery.IsEmpty || _gridConfigQuery.IsEmpty)             return;          int2 heroPos;         if (!TryGetHeroPos(out heroPos)) return;          UpdateLeftFlower(heroPos);         UpdateRightFlower(heroPos);     }      // ══════════════════════════════════════════════════════════════     //  ЛЕВЫЙ ЦВЕТОЧЕК — радиация     // ══════════════════════════════════════════════════════════════     void UpdateLeftFlower(int2 heroPos)     {         if (_radiationConfigQuery.IsEmpty) return;          var mapEntity = _mapQuery.GetSingletonEntity();         if (!_em.HasBuffer<ZoneCellRadiation>(mapEntity)) return;          var buf    = _em.GetBuffer<ZoneCellRadiation>(mapEntity, true);         var config = _radiationConfigQuery.GetSingleton<ZoneRadiationConfig>();         var grid   = _gridConfigQuery.GetSingleton<GridConfig>();          for (int i = 0; i < 7; i++)         {             int2 pos = heroPos + HexOffsets[i];             int  rad = GetRadiationAt(pos, buf, grid.GridSize);              _leftLabels[i].text = rad >= 0 ? rad.ToString() : "—";             _leftHexes[i].style.backgroundColor = GetRadiationColor(rad, config);         }     }      // ══════════════════════════════════════════════════════════════     //  ПРАВЫЙ ЦВЕТОЧЕК — режимы     // ══════════════════════════════════════════════════════════════     void OnRightCenterClick(ClickEvent evt)     {         _rightMode = (_rightMode == RightFlowerMode.Off) ? RightFlowerMode.MultiCell : RightFlowerMode.Off;     }      void UpdateRightFlower(int2 heroPos)     {         switch (_rightMode)         {             case RightFlowerMode.Off:       DrawRightOff();            break;             case RightFlowerMode.MultiCell: DrawRightMultiCell(heroPos); break;         }     }      void DrawRightOff()     {         _rightHexes[0].style.backgroundColor = ColorCenterOff;         _rightLabels[0].text = "OFF";          for (int i = 1; i < 7; i++)         {             _rightHexes[i].style.backgroundColor = ColorOff;             _rightLabels[i].text = "";         }     }      /// <summary>     /// MultiCell — для каждого из 6 направлений стреляем лучом и ищем ближайшую аномалию.     /// </summary>     void DrawRightMultiCell(int2 heroPos)     {         var mapEntity = _mapQuery.GetSingletonEntity();         if (!_em.HasBuffer<ZoneEventElement>(mapEntity))         {             DrawRightOff();             return;         }          var events = _em.GetBuffer<ZoneEventElement>(mapEntity, true);         var grid   = _gridConfigQuery.GetSingleton<GridConfig>();          _rightHexes[0].style.backgroundColor = ColorCenterOn;         _rightLabels[0].text = "SCAN";          for (int i = 1; i < 7; i++)         {             int dist = FindNearestAnomalyInDirection(heroPos, HexOffsets[i], events, grid.GridSize);              if (dist < 0)             {                 _rightHexes[i].style.backgroundColor = ColorEmpty;                 _rightLabels[i].text = "—";             }             else             {                 _rightLabels[i].text = dist.ToString();                 _rightHexes[i].style.backgroundColor = GetAnomalyDistColor(dist);             }         }     }      /// <summary>     /// Луч из heroPos в направлении dir. Возвращает расстояние до ближайшей     /// обнаруженной аномалии или -1.     /// </summary>     int FindNearestAnomalyInDirection(int2 heroPos, int2 dir, DynamicBuffer<ZoneEventElement> events, int2 gridSize)     {         for (int step = 1; step <= MAX_RAY_DIST; step++)         {             int2 current = heroPos + dir * step;              if (!HexGridUtils.IsHexInBounds(current, gridSize))                 return -1;              for (int e = 0; e < events.Length; e++)             {                 var evt = events[e];                 if (evt.EventType != ZoneEventType.Anomaly) continue;                 if (!evt.IsDiscovered) continue;                 if (evt.GridPos.x == current.x && evt.GridPos.y == current.y)                     return step;             }         }         return -1;     }      Color GetAnomalyDistColor(int dist)     {         if (dist <= 2) return ColorAnomalyNear;         if (dist <= 5) return ColorAnomalyMid;         return ColorAnomalyFar;     }      // ══════════════════════════════════════════════════════════════     //  УТИЛИТЫ     // ══════════════════════════════════════════════════════════════     bool TryGetHeroPos(out int2 pos)     {         pos = default;         var entities = _heroQuery.ToEntityArray(Allocator.Temp);         bool found = false;          for (int i = 0; i < entities.Length; i++)         {             if (_em.GetComponentData<UnitIdComponent>(entities[i]).UnitId == 0)             {                 pos   = _em.GetComponentData<GridCoordinates>(entities[i]).Value;                 found = true;                 break;             }         }          entities.Dispose();         return found;     }      int GetRadiationAt(int2 pos, DynamicBuffer<ZoneCellRadiation> buffer, int2 gridSize)     {         if (!HexGridUtils.IsHexInBounds(pos, gridSize)) return -1;         int index = HexGridUtils.HexToIndex(pos, gridSize);         if (index < 0 || index >= buffer.Length) return -1;         return buffer[index].RadiationLevel;     }      Color GetRadiationColor(int radiation, ZoneRadiationConfig cfg)     {         if (radiation < 0) return new Color(0.3f, 0.3f, 0.3f, 0.5f);          Color c;         if      (radiation <= cfg.LevelGreen)  c = new Color(cfg.ColorGreen.x,  cfg.ColorGreen.y,  cfg.ColorGreen.z);         else if (radiation <= cfg.LevelYellow) c = new Color(cfg.ColorYellow.x, cfg.ColorYellow.y, cfg.ColorYellow.z);         else if (radiation <= cfg.LevelOrange) c = new Color(cfg.ColorOrange.x, cfg.ColorOrange.y, cfg.ColorOrange.z);         else                                   c = new Color(cfg.ColorRed.x,     cfg.ColorRed.y,     cfg.ColorRed.z);         c.a = 0.8f;         return c;     } } 

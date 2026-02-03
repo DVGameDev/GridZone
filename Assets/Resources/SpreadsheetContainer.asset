@@ -34,13 +34,13 @@ MonoBehaviour:
       BaseRenewAP: 1
       BaseRenewCards: 3
       BaseHandSize: 5
-      PositionX: 3
-      PositionZ: 8
+      PositionX: 10
+      PositionZ: 1
       SizeX: 1
       SizeZ: 1
       Layer: Ground
-      FacingX: 1
-      FacingZ: 0
+      FacingX: 0
+      FacingZ: 1
       UnitPrefab: Paladin_Unit
     Effects:
     - UnitID: 0

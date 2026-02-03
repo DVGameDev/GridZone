@@ -1,6 +1,11 @@
+﻿using System.Drawing;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using UnityEngine.LightTransport;
+
+
+
 
 /// <summary>
 /// Полная математика Flat-Top Hex Grid (Axial координаты q,r)
@@ -8,30 +13,61 @@ using Unity.Mathematics;
 /// </summary>
 public static class HexGridUtils
 {
-    /// <summary>
-    /// Axial (q,r) → World позиция (Flat-Top)
-    /// </summary>
     public static float3 HexAxialToWorld(int2 axial, float hexSize)
     {
-        float x = hexSize * (3f / 2f * axial.x);
-        float z = hexSize * (math.sqrt(3f) * axial.y + math.sqrt(3f) / 2f * axial.x);
+        float x = hexSize * (1.5f * axial.x);
+        float z = hexSize * (math.sqrt(3f) * (axial.y + axial.x * 0.5f));
         return new float3(x, 0, z);
     }
 
-    /// <summary>
-    /// World → Axial (q,r) координаты (Flat-Top)
-    /// </summary>
     public static int2 WorldToHexAxial(float3 worldPos, float hexSize)
     {
-        float q = (2f / 3f * worldPos.x) / hexSize;
-        float r = (-1f / 3f * worldPos.x + math.sqrt(3f) / 3f * worldPos.z) / hexSize;
+        int2 gridSize = HexGridRuntimeCache.GridSize;
 
-        return HexRound(q, r);
+        float fq = (2f / 3f * worldPos.x) / hexSize;
+        float fr = (-1f / 3f * worldPos.x + math.sqrt(3f) / 3f * worldPos.z) / hexSize;
+
+        int2 axial = HexRound(fq, fr);
+
+        int col = axial.x;
+        int row = axial.y + (axial.x >> 1);
+
+        col = math.clamp(col, 0, gridSize.x - 1);
+        row = math.clamp(row, 0, gridSize.y - 1);
+
+        int r = row - (col >> 1);
+        return new int2(col, r);
     }
+
 
     /// <summary>
     /// Округление дробных hex координат до целых (Axial)
     /// </summary>
+    // odd-r axial -> offset
+    public static int2 AxialToOffset(int2 axial)
+    {
+        int col = axial.x + (axial.y >> 1);
+        int row = axial.y;
+        return new int2(col, row);
+    }
+
+    // odd-r offset -> axial
+    public static int2 OffsetToAxial(int2 offset)
+    {
+        int q = offset.x - (offset.y >> 1);
+        int r = offset.y;
+        return new int2(q, r);
+    }
+    public static bool IsOffsetInBounds(int2 offset, int2 gridSize)
+    {
+        return offset.x >= 0 && offset.x < gridSize.x &&
+               offset.y >= 0 && offset.y < gridSize.y;
+    }
+    public static int OffsetToIndex(int2 offset, int2 gridSize)
+    {
+        return offset.y * gridSize.x + offset.x;
+    }
+
     private static int2 HexRound(float q, float r)
     {
         float s = -q - r;
@@ -51,6 +87,27 @@ public static class HexGridUtils
 
         return new int2(rq, rr);
     }
+    public static int HexToIndex(int2 axial, int2 gridSize)
+    {
+        int col = axial.x;
+        int row = axial.y + (axial.x >> 1);
+
+        return row * gridSize.x + col;
+    }
+
+
+
+    public static int2 IndexToHex(int index, int2 gridSize)
+    {
+        int x = index % gridSize.x;
+        int z = index / gridSize.x;
+
+        int q = x;
+        int r = z - (x >> 1);
+
+        return new int2(q, r);
+    }
+
 
     /// <summary>
     /// Получить 6 соседей hex клетки (Flat-Top Axial)
@@ -84,17 +141,19 @@ public static class HexGridUtils
     /// </summary>
     public static bool IsHexInBounds(int2 axial, int2 gridSize)
     {
-        return axial.x >= 0 && axial.x < gridSize.x &&
-               axial.y >= 0 && axial.y < gridSize.y;
+        int col = axial.x;
+        int row = axial.y + (axial.x >> 1);
+
+        return col >= 0 && col < gridSize.x &&
+               row >= 0 && row < gridSize.y;
     }
+
+
 
     /// <summary>
     /// Линейный индекс hex клетки в буфере (совместимо с Quad)
     /// </summary>
-    public static int HexToIndex(int2 axial, int2 gridSize)
-    {
-        return axial.y * gridSize.x + axial.x;
-    }
+
 
     /// <summary>
     /// Получить все hex клетки в радиусе (для движения/AoE)
@@ -115,7 +174,8 @@ public static class HexGridUtils
                 int2 hex = center + new int2(dq, dr);
 
                 // Проверяем границы сетки
-                if (hex.x >= 0 && hex.x < gridSize.x && hex.y >= 0 && hex.y < gridSize.y)
+                if (IsHexInBounds(hex, gridSize))
+
                 {
                     results.Add(hex);
                 }
@@ -126,22 +186,22 @@ public static class HexGridUtils
     /// <summary>
     /// Конвертация Axial → World с учетом высоты слоя
     /// </summary>
-    public static float3 GetHexWorldPosition(int2 axial, float hexSize, UnitLayer layer, GridConfig config)
+    public static float3 GetHexWorldPosition(
+        int2 axial,
+        float hexSize,
+        UnitLayer layer,
+        GridConfig config)
     {
-        float3 basePos = HexAxialToWorld(axial, hexSize);
+        float3 pos = HexAxialToWorld(axial, hexSize);
 
-        float posY = config.HeightGround;
-        switch (layer)
+        pos.y = layer switch
         {
-            case UnitLayer.Sky:
-                posY = config.HeightSky;
-                break;
-            case UnitLayer.Underground:
-                posY = config.HeightUnderground;
-                break;
-        }
+            UnitLayer.Sky => config.HeightSky,
+            UnitLayer.Underground => config.HeightUnderground,
+            _ => config.HeightGround
+        };
 
-        return new float3(basePos.x, posY, basePos.z);
+        return pos;
     }
 
     /// <summary>
