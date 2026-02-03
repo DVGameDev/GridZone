@@ -1,4 +1,4 @@
-.flower-container {
+﻿.flower-container {
   position: relative;
   width: 300px;
   height: 300px;
@@ -53,3 +53,41 @@
   left: 120px;
   top: 60px;
 }
+.flower-container {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  width: 300px;
+  height: 300px;
+}
+
+.flower-right {
+  left: auto;
+  right: 20px;
+}
+
+.hexagon {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background-color: #ccc;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.hex-label {
+  color: #000;
+  font-size: 14px;
+}
+
+/* Позиции хексов по классу, работает для обоих цветочков */
+.hex-0 { left: 120px; top: 120px; }
+.hex-1 { left: 180px; top: 90px; }
+.hex-2 { left: 180px; top: 150px; }
+.hex-3 { left: 120px; top: 180px; }
+.hex-4 { left: 60px;  top: 150px; }
+.hex-5 { left: 60px;  top: 90px; }
+.hex-6 { left: 120px; top: 60px; }

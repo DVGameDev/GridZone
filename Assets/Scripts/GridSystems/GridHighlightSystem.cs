@@ -1,4 +1,4 @@
-using Unity.Collections;
+﻿using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Rendering;
@@ -95,14 +95,16 @@ public partial class GridHighlightSystem : SystemBase
         _lastUnitGridPos = currentGridPos;
         _lastMode = selectionState.Mode;
 
-        bool showObstacles = (selectionState.Mode == InteractionMode.Move);
+        bool isZoneMode = SystemAPI.HasSingleton<ZoneModeTag>();
+        bool showObstacles = (selectionState.Mode == InteractionMode.Move) && !isZoneMode;
+
 
         // Очищаем только старые подсвеченные клетки
         ClearPreviousHighlights(mapBuffer, gridSize, currentLayer, showObstacles, colors);
 
         if (unitValid)
         {
-            if (selectionState.Mode == InteractionMode.Move && EntityManager.HasComponent<UnitStats>(selectedUnit))
+            if (selectionState.Mode == InteractionMode.Move && !isZoneMode && EntityManager.HasComponent<UnitStats>(selectedUnit))
             {
                 int range = EntityManager.GetComponentData<UnitStats>(selectedUnit).MoveRange;
                 HighlightMovementRange(mapBuffer, gridSize, currentGridPos, range, unitSize, selectedUnit, currentLayer, colors);

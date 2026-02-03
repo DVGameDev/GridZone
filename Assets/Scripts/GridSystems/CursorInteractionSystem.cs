@@ -1,4 +1,4 @@
-using Unity.Collections;
+﻿using Unity.Collections;
 using Unity.Entities;
 using Unity.Physics;
 using Unity.Physics.Systems;
@@ -114,6 +114,8 @@ public partial class CursorInteractionSystem : SystemBase
         public GridConfig Config;
         public DynamicBuffer<GridCellElement> MapBuffer;
         public GridColorConfig Colors;
+        public bool IsZoneMode;
+
     }
 
     private InteractionContext PrepareContext()
@@ -125,6 +127,8 @@ public partial class CursorInteractionSystem : SystemBase
         var selectionState = SystemAPI.GetSingleton<ActiveUnitComponent>();
         context.SelectedUnit = selectionState.Unit;
         context.Mode = selectionState.Mode;
+        context.IsZoneMode = SystemAPI.HasSingleton<ZoneModeTag>();
+
 
         if (context.SelectedUnit == Entity.Null || !EntityManager.Exists(context.SelectedUnit))
             return context;
@@ -517,13 +521,28 @@ public partial class CursorInteractionSystem : SystemBase
                 context.MapBuffer, context.GridSize, context.Layer, context.Config);
         }
         // Движение (обычный клик)
-        else if (isActionClick && !data.IsBlocked)
+        else if (isActionClick)
         {
-            UnitActionHelper.TryMoveUnit(
-                EntityManager, context.SelectedUnit, unitPos, hitCoords,
-                currentSize, currentFacing, context.Config.Spacing,
-                context.MapBuffer, context.GridSize, context.Layer, context.Config);
+            if (context.IsZoneMode)
+            {
+                // 🔥 ZONE MODE: можно ходить ТОЛЬКО на соседнюю клетку
+                if (HexGridUtils.HexDistance(unitPos, hitCoords) <= 1)
+                {
+                    UnitActionHelper.TryMoveUnit(
+                        EntityManager, context.SelectedUnit, unitPos, hitCoords,
+                        currentSize, currentFacing, context.Config.Spacing,
+                        context.MapBuffer, context.GridSize, context.Layer, context.Config);
+                }
+            }
+            else if (!data.IsBlocked)
+            {
+                UnitActionHelper.TryMoveUnit(
+                    EntityManager, context.SelectedUnit, unitPos, hitCoords,
+                    currentSize, currentFacing, context.Config.Spacing,
+                    context.MapBuffer, context.GridSize, context.Layer, context.Config);
+            }
         }
+
     }
 
     private void HandleEffectInput(InteractionContext context, CursorData data, int2 hitCoords, bool isActionClick, DynamicBuffer<EffectCommandBuffer> commandBuffer)
