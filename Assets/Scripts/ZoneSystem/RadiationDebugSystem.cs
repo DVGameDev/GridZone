@@ -1,4 +1,4 @@
-﻿using Unity.Entities;
+using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Rendering;
 
@@ -34,16 +34,12 @@ public partial class RadiationColorSystem : SystemBase
             GetComponentLookup<URPMaterialPropertyBaseColor>(false);
         var customLookup =
             GetComponentLookup<CellCustomColor>(false);
-        var spawnerQuery = EntityManager.CreateEntityQuery(
-    ComponentType.ReadOnly<ZoneSpawnerComponent>(),
-    ComponentType.ReadOnly<ZoneBaseGridColor>());
 
-        if (spawnerQuery.IsEmpty)
+        // 🔥 ИСПРАВЛЕНО: Берем базовый цвет с GridMap вместо ZoneSpawnerComponent
+        if (!EntityManager.HasComponent<ZoneBaseGridColor>(mapEntity))
             return;
-
-        var spawnerEntity = spawnerQuery.GetSingletonEntity();
-        var baseGridColor =
-            EntityManager.GetComponentData<ZoneBaseGridColor>(spawnerEntity);
+            
+        var baseGridColor = EntityManager.GetComponentData<ZoneBaseGridColor>(mapEntity);
 
 
         for (int i = 0; i < buffer.Length; i++)

@@ -1,4 +1,4 @@
-﻿using Unity.Entities;
+using Unity.Entities;
 using Unity.Mathematics;
 
 
@@ -6,6 +6,14 @@ public struct RadiationDebugState : IComponentData
 {
     public bool RevealAll;   // режим
     public bool Dirty;       // нужно ли пересчитать визуал
+}
+
+/// <summary>
+/// Состояние дебага событий (показать все события на карте)
+/// </summary>
+public struct EventDebugState : IComponentData
+{
+    public bool ShowAll;   // показать все события, даже неоткрытые
 }
 
 
@@ -76,6 +84,7 @@ public struct ZoneIslandConfig : IComponentData
 public struct HeroRadiationData : IComponentData
 {
     public int TotalRadiation;
+    public int2 LastProcessedPosition; // Последняя обработанная позиция
 }
 
 /// <summary>

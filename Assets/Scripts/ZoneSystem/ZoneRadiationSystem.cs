@@ -1,4 +1,4 @@
-﻿using Unity.Burst;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -31,9 +31,16 @@ public partial class ZoneRadiationSystem : SystemBase
         {
             if (unitId.ValueRO.UnitId != 0) continue;
 
-            ProcessHeroCell(radiationBuffer, gridPos.ValueRO.Value, ref heroRadiation.ValueRW);
-
-
+            // 🔥 ИСПРАВЛЕНО: Проверяем, изменилась ли позиция героя
+            int2 currentPos = gridPos.ValueRO.Value;
+            int2 lastPos = heroRadiation.ValueRO.LastProcessedPosition;
+            
+            // Начисляем радиацию только если герой переместился на новую клетку
+            if (!currentPos.Equals(lastPos))
+            {
+                ProcessHeroCell(radiationBuffer, currentPos, ref heroRadiation.ValueRW);
+                heroRadiation.ValueRW.LastProcessedPosition = currentPos;
+            }
         }
     }
 
@@ -46,12 +53,14 @@ public partial class ZoneRadiationSystem : SystemBase
         {
             var cell = radiationBuffer[index];
            
-            if (!cell.IsVisited)
-            {
-                // 🔥 Первое посещение!
-                heroRadiation.TotalRadiation += cell.RadiationLevel;
+            // 🔥 ИСПРАВЛЕНО: Считаем радиацию каждый ход, а не только при первом посещении
+            heroRadiation.TotalRadiation += cell.RadiationLevel;
+            
+            bool wasVisited = cell.IsVisited;
 
-                // Помечаем посещенной
+            // Помечаем посещенной (если еще не посещали)
+            if (!wasVisited)
+            {
                 radiationBuffer[index] = new ZoneCellRadiation
                 {
                     GridPos = cell.GridPos,
@@ -60,12 +69,11 @@ public partial class ZoneRadiationSystem : SystemBase
                     IsVisited = true
                 };
 
-                Debug.Log($"[ZoneRadiation] Hero visited cell {index}, radiation +{cell.RadiationLevel}. Total: {heroRadiation.TotalRadiation}");
-
-                // 🔥 Раскрасить клетку полностью (убрать прозрачность)
+                // 🔥 Раскрасить клетку полностью (убрать прозрачность) только при первом посещении
                 RevealCellColor(cell.CellEntity, cell.RadiationLevel);
-
             }
+
+            Debug.Log($"[ZoneRadiation] Hero on cell {index}, radiation +{cell.RadiationLevel}. Total: {heroRadiation.TotalRadiation}");
         }
     }
 

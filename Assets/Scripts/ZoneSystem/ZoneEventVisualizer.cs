@@ -1,4 +1,4 @@
-﻿using Unity.Entities;
+using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using System.Collections.Generic;
@@ -6,13 +6,8 @@ using System.Collections.Generic;
 public class ZoneEventVisualizer : MonoBehaviour
 {
     [Header("Event Visualization Settings")]
-    public float MarkerSize = 0.3f;
-    public float MarkerHeight = 1.0f;
-
-    [Header("Event Colors")]
-    public Color AnomalyColor = new Color(1f, 0f, 1f, 0.8f);
-    public Color FightColor = new Color(1f, 0.3f, 0f, 0.8f);
-    public Color EventColor = new Color(0f, 1f, 1f, 0.8f);
+    public float IconSize = 1.0f;
+    public float IconHeight = 1.5f;
 
     [Header("Alpha Settings")]
     public float DiscoveredAlpha = 1.0f;
@@ -20,12 +15,17 @@ public class ZoneEventVisualizer : MonoBehaviour
 
     private EntityManager _entityManager;
     private Dictionary<Entity, GameObject> _eventMarkers = new Dictionary<Entity, GameObject>();
-    private Material _markerMaterial;
+    
+    // Спрайты для разных типов событий
+    private Sprite _questIcon;
+    private Sprite _battleIcon;
+    private Sprite _anomalyIcon;
 
     // Кэшированные запросы
     private EntityQuery _zoneQuery;
     private EntityQuery _mapQuery;
     private EntityQuery _gridConfigQuery;
+    private EntityQuery _debugQuery;
 
     void Start()
     {
@@ -34,9 +34,16 @@ public class ZoneEventVisualizer : MonoBehaviour
         _zoneQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<ZoneModeTag>());
         _mapQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<GridMapTag>());
         _gridConfigQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<GridConfig>());
+        _debugQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<EventDebugState>());
 
-        _markerMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-        _markerMaterial.SetFloat("_Surface", 1);
+        // Загружаем иконки из Resources/Icons
+        _questIcon = Resources.Load<Sprite>("Icons/Quest_icon");
+        _battleIcon = Resources.Load<Sprite>("Icons/Battle_icon");
+        _anomalyIcon = Resources.Load<Sprite>("Icons/Anomaly_icon");
+        
+        if (_questIcon == null) Debug.LogWarning("[ZoneEventVisualizer] Quest_icon not found in Resources/Icons!");
+        if (_battleIcon == null) Debug.LogWarning("[ZoneEventVisualizer] Battle_icon not found in Resources/Icons!");
+        if (_anomalyIcon == null) Debug.LogWarning("[ZoneEventVisualizer] Anomaly_icon not found in Resources/Icons!");
     }
 
     void Update()
@@ -60,16 +67,40 @@ public class ZoneEventVisualizer : MonoBehaviour
     void UpdateEventMarkers(DynamicBuffer<ZoneEventElement> eventBuffer, GridConfig gridConfig)
     {
         var activeEvents = new HashSet<Entity>();
+        
+        // Проверяем режим дебага "показать все события"
+        bool showAllEvents = false;
+        if (!_debugQuery.IsEmpty)
+        {
+            var debugState = _debugQuery.GetSingleton<EventDebugState>();
+            showAllEvents = debugState.ShowAll;
+        }
 
         foreach (var evt in eventBuffer)
         {
             if (!_entityManager.Exists(evt.EventEntity)) continue;
             activeEvents.Add(evt.EventEntity);
 
+            // Показываем только открытые события, либо все в режиме дебага
+            bool shouldShow = evt.IsDiscovered || showAllEvents;
+            
             if (!_eventMarkers.ContainsKey(evt.EventEntity))
-                CreateMarker(evt, gridConfig);
-
-            UpdateMarker(evt);
+            {
+                if (shouldShow)
+                    CreateMarker(evt, gridConfig);
+            }
+            else
+            {
+                if (shouldShow)
+                    UpdateMarker(evt, showAllEvents);
+                else
+                {
+                    // Скрываем маркер, если режим дебага выключен и событие не открыто
+                    if (_eventMarkers[evt.EventEntity] != null)
+                        Destroy(_eventMarkers[evt.EventEntity]);
+                    _eventMarkers.Remove(evt.EventEntity);
+                }
+            }
         }
 
         // Удаляем маркеры событий, которых больше нет
@@ -87,49 +118,54 @@ public class ZoneEventVisualizer : MonoBehaviour
 
     void CreateMarker(ZoneEventElement evt, GridConfig gridConfig)
     {
-        var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        marker.name = $"EventMarker_{evt.EventType}_{evt.GridPos}";
+        var marker = new GameObject($"EventMarker_{evt.EventType}_{evt.GridPos}");
 
         float3 worldPos = HexGridUtils.HexAxialToWorld(evt.GridPos, gridConfig.Spacing);
-        worldPos.y = MarkerHeight;
+        worldPos.y = IconHeight;
         marker.transform.position = worldPos;
-        marker.transform.localScale = Vector3.one * MarkerSize;
 
-        var renderer = marker.GetComponent<MeshRenderer>();
-        renderer.material = new Material(_markerMaterial);
+        // Создаём SpriteRenderer для отображения иконки
+        var spriteRenderer = marker.AddComponent<SpriteRenderer>();
+        spriteRenderer.sprite = GetEventSprite(evt.EventType);
+        
+        // Настраиваем размер и поворот
+        marker.transform.localScale = Vector3.one * IconSize;
+        marker.transform.rotation = Quaternion.Euler(90, 0, 0); // Поворачиваем чтобы было видно сверху
 
-        Color color = GetEventColor(evt.EventType);
+        // Устанавливаем прозрачность
+        Color color = Color.white;
         color.a = evt.IsDiscovered ? DiscoveredAlpha : UndiscoveredAlpha;
-        renderer.material.color = color;
+        spriteRenderer.color = color;
 
         _eventMarkers[evt.EventEntity] = marker;
     }
 
-    void UpdateMarker(ZoneEventElement evt)
+    void UpdateMarker(ZoneEventElement evt, bool showAllEvents)
     {
         if (!_eventMarkers.TryGetValue(evt.EventEntity, out var marker) || marker == null) return;
 
-        var renderer = marker.GetComponent<MeshRenderer>();
-        if (renderer == null || renderer.material == null) return;
+        var spriteRenderer = marker.GetComponent<SpriteRenderer>();
+        if (spriteRenderer == null) return;
 
-        float targetAlpha = evt.IsDiscovered ? DiscoveredAlpha : UndiscoveredAlpha;
-        Color color = renderer.material.color;
+        // В режиме дебага "показать все" - показываем все события с полной прозрачностью
+        float targetAlpha = showAllEvents ? 1.0f : (evt.IsDiscovered ? DiscoveredAlpha : UndiscoveredAlpha);
+        Color color = spriteRenderer.color;
 
         if (Mathf.Abs(color.a - targetAlpha) > 0.01f)
         {
             color.a = Mathf.Lerp(color.a, targetAlpha, Time.deltaTime * 5f);
-            renderer.material.color = color;
+            spriteRenderer.color = color;
         }
     }
 
-    Color GetEventColor(ZoneEventType type)
+    Sprite GetEventSprite(ZoneEventType type)
     {
         switch (type)
         {
-            case ZoneEventType.Anomaly: return AnomalyColor;
-            case ZoneEventType.Fight: return FightColor;
-            case ZoneEventType.Event: return EventColor;
-            default: return Color.white;
+            case ZoneEventType.Anomaly: return _anomalyIcon;
+            case ZoneEventType.Fight: return _battleIcon;
+            case ZoneEventType.Event: return _questIcon;
+            default: return null;
         }
     }
 
