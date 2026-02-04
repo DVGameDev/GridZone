@@ -7,6 +7,7 @@ using Unity.Rendering;
 using Unity.Jobs;
 using UnityEngine;
 
+
 /// <summary>
 /// Система генерации ZONE карты (Hex Grid + радиация)
 /// Запускается ВМЕСТО GridSpawnerSystem/HexGridSpawnerSystem
@@ -103,9 +104,20 @@ public partial struct ZoneSpawnerSystem : ISystem
             jobHandle.Complete();
 
             // 🔥 6. Генерация островов радиации
-            ZoneIslandGenerator.GenerateGreenIslands(radiationBuffer, spawnerData.GridSize, radiationConfig, islandConfig, 1234);
-            ZoneIslandGenerator.GenerateOrangeIslands(radiationBuffer, spawnerData.GridSize, radiationConfig, islandConfig, 5678);
-            ZoneIslandGenerator.GenerateRedIslands(radiationBuffer, spawnerData.GridSize, radiationConfig, islandConfig, 9012);
+            // ✅ Полностью Burst-совместимо
+            double time = SystemAPI.Time.ElapsedTime;
+            uint frameCount = (uint)UnityEngine.Time.frameCount; // Это можно вызывать вне Burst
+
+            // Создаём уникальный seed из времени и счётчика кадров
+            uint seed = math.hash(new uint2(
+                (uint)(time * 1000000.0),
+                frameCount
+            ));
+
+           // var random = Unity.Mathematics.Random.CreateFromIndex(seed);
+            ZoneIslandGenerator.GenerateGreenIslands(radiationBuffer, spawnerData.GridSize, radiationConfig, islandConfig, seed);
+            ZoneIslandGenerator.GenerateOrangeIslands(radiationBuffer, spawnerData.GridSize, radiationConfig, islandConfig, (seed + 1000));
+            ZoneIslandGenerator.GenerateRedIslands(radiationBuffer, spawnerData.GridSize, radiationConfig, islandConfig, (seed + 2000));
 
             // 🔥 7. Применение цветов к клеткам
             //ApplyRadiationColorsToCells(radiationBuffer, radiationConfig, colorsLookup: state.GetComponentLookup<URPMaterialPropertyBaseColor>(false), customColorsLookup: state.GetComponentLookup<CellCustomColor>(false));

@@ -223,6 +223,8 @@ MonoBehaviour:
     Prefab: {fileID: 7670652439605481391, guid: fef2efaef9940a74ea49bef4827bfa10, type: 3}
   - Name: Skeleton_Unit
     Prefab: {fileID: 2473344548512605074, guid: 53c49c25fb77ba7479927e7da7bbd934, type: 3}
+  - Name: Scavenger_Unit
+    Prefab: {fileID: 7101625530902779387, guid: 848fa04ab78652e4cb937d9380d1c6e5, type: 3}
 --- !u!4 &414506254
 Transform:
   m_ObjectHideFlags: 0
@@ -405,7 +407,8 @@ MonoBehaviour:
   AnomalyProbability: 0.05
   FightProbability: 0.03
   EventProbability: 0.02
-  ColorGray: {r: 0, g: 0, b: 0, a: 0.6039216}
+  MaxBatteryCapacity: 300
+  ColorGray: {r: 0, g: 0, b: 0, a: 0}
   ColorBlue: {r: 0, g: 0, b: 1, a: 0.1254902}
   ColorBlack: {r: 0, g: 0, b: 0, a: 0.8}
   ColorPurple: {r: 0.6, g: 0, b: 0.8, a: 0.5}

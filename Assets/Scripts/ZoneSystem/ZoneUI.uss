@@ -1,4 +1,4 @@
-﻿/* Контейнеры цветочков */
+/* Контейнеры цветочков */
 .flower-container {
   position: absolute;
   width: 300px;
@@ -137,11 +137,12 @@
   background-color: rgba(80, 40, 80, 0.9);
   border-color: rgba(255, 150, 255, 0.8);
 }
-/* Контейнер прогрессбара */
+
+/* Контейнер прогрессбара радиации */
 .radiation-bar-container {
   position: absolute;
   left: 10px;
-  top: 340px;          /* аккуратно под цветком */
+  top: 400px;
   width: 40px;
   height: 400px;
   background-color: rgba(40, 40, 40, 0.8);
@@ -150,30 +151,31 @@
   justify-content: flex-end;
 }
 
-/* Заполнение */
+/* Заполнение радиации */
 .radiation-bar-fill {
   width: 100%;
   height: 0%;
   background-color: rgba(120, 255, 120, 0.9);
 }
 
-/* Подпись */
+/* Подпись % радиации (сверху полосы) */
 .radiation-bar-label {
   position: absolute;
   top: -22px;
   left: -10px;
-  width: 40px;
+  width: 60px;
   text-align: center;
   font-size: 12px;
   color: white;
   -unity-font-style-and-weight: bold;
 }
 
-/* Контейнер прогрессбара аккумулятора (справа) */
+
+/* Контейнер прогрессбара аккумулятора */
 .battery-bar-container {
   position: absolute;
-  right: 340px;         /* Правая сторона, справа от цветка */
-  top: 340px;          
+  right: 10px;
+  top: 400px;
   width: 40px;
   height: 400px;
   background-color: rgba(40, 40, 40, 0.8);
@@ -185,11 +187,11 @@
 /* Заполнение аккумулятора */
 .battery-bar-fill {
   width: 100%;
-  height: 100%;        /* По умолчанию полный заряд */
-  background-color: rgba(100, 200, 255, 0.9); /* Синий для энергии */
+  height: 100%;
+  background-color: rgba(100, 200, 255, 0.9);
 }
 
-/* Подпись аккумулятора */
+/* Подпись % аккумулятора (сверху полосы) */
 .battery-bar-label {
   position: absolute;
   top: -22px;
@@ -199,4 +201,33 @@
   font-size: 12px;
   color: white;
   -unity-font-style-and-weight: bold;
+}
+
+
+/* 🔥 НОВОЕ: Кнопка визуальных приборов (внизу посередине экрана) */
+.visual-device-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  translate: -50% 0;
+  width: 400px;
+  height: 40px;
+}
+
+.visual-device-btn {
+  width: 100%;
+  height: 40px;
+  margin: 0;
+  font-size: 14px;
+  -unity-font-style-and-weight: bold;
+  border-radius: 5px;
+  border-width: 2px;
+  border-color: rgba(255, 200, 50, 0.8);
+  background-color: rgba(50, 40, 40, 0.9);
+  color: #fff;
+}
+
+.visual-device-btn:hover {
+  background-color: rgba(80, 60, 60, 0.95);
+  border-color: rgba(255, 220, 100, 0.9);
 }

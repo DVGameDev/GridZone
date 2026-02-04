@@ -39,7 +39,9 @@ public partial struct ZoneEventGeneratorSystem : ISystem
 
         // ── Шаг 2: генерируем события на основе скопированных данных ──
         var pending = new System.Collections.Generic.List<(Entity entity, int2 pos, ZoneEventType type, int visibility)>();
-        var random = Unity.Mathematics.Random.CreateFromIndex(9999);
+        uint seed = (uint)(System.DateTime.Now.Ticks ^ UnityEngine.Random.Range(1, 999999));
+        var random = Unity.Mathematics.Random.CreateFromIndex(seed);
+
 
         foreach (var (gridPos, radiationLevel) in cellDataList)
         {

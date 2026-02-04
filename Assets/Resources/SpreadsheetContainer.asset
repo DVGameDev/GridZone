@@ -34,14 +34,14 @@ MonoBehaviour:
       BaseRenewAP: 1
       BaseRenewCards: 3
       BaseHandSize: 5
-      PositionX: 4
+      PositionX: 1
       PositionZ: 1
-      SizeX: 0
-      SizeZ: 0
+      SizeX: 1
+      SizeZ: 1
       Layer: Ground
       FacingX: 0
       FacingZ: 1
-      UnitPrefab: Paladin_Unit
+      UnitPrefab: Scavenger_Unit
     Effects:
     - UnitID: 0
       EffectID: 1

@@ -1,4 +1,4 @@
-﻿<engine:UXML xmlns:engine="UnityEngine.UIElements" editor-extension-mode="False">
+<engine:UXML xmlns:engine="UnityEngine.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/Scripts/ZoneSystem/FlowerHexagon.uss?fileID=7433441132597879392&amp;guid=3e0e79373101e0d44bfc830b97552405&amp;type=3#FlowerHexagon"/>
     
     <!-- КНОПКА ОТЛАДКИ ДЛЯ РАДИАЦИИ -->
@@ -9,31 +9,31 @@
     <!-- ЛЕВЫЙ ЦВЕТОЧЕК: радиация -->
     <engine:VisualElement name="flower-left" class="flower-container flower-left">
         <engine:VisualElement name="left-hex-0" class="hexagon hex-pos-0">
-            <engine:Label name="left-label-0" text="0" class="hex-label"/>
+            <engine:Label name="left-label-0" text="" class="hex-label"/>
         </engine:VisualElement>
         <engine:VisualElement name="left-hex-1" class="hexagon hex-pos-1">
-            <engine:Label name="left-label-1" text="1" class="hex-label"/>
+            <engine:Label name="left-label-1" text="" class="hex-label"/>
         </engine:VisualElement>
         <engine:VisualElement name="left-hex-2" class="hexagon hex-pos-2">
-            <engine:Label name="left-label-2" text="2" class="hex-label"/>
+            <engine:Label name="left-label-2" text="" class="hex-label"/>
         </engine:VisualElement>
         <engine:VisualElement name="left-hex-3" class="hexagon hex-pos-3">
-            <engine:Label name="left-label-3" text="3" class="hex-label"/>
+            <engine:Label name="left-label-3" text="" class="hex-label"/>
         </engine:VisualElement>
         <engine:VisualElement name="left-hex-4" class="hexagon hex-pos-4">
-            <engine:Label name="left-label-4" text="4" class="hex-label"/>
+            <engine:Label name="left-label-4" text="" class="hex-label"/>
         </engine:VisualElement>
         <engine:VisualElement name="left-hex-5" class="hexagon hex-pos-5">
-            <engine:Label name="left-label-5" text="5" class="hex-label"/>
+            <engine:Label name="left-label-5" text="" class="hex-label"/>
         </engine:VisualElement>
         <engine:VisualElement name="left-hex-6" class="hexagon hex-pos-6">
-            <engine:Label name="left-label-6" text="6" class="hex-label"/>
+            <engine:Label name="left-label-6" text="" class="hex-label"/>
         </engine:VisualElement>
     </engine:VisualElement>
     
     <!-- КНОПКА УПРАВЛЕНИЯ под левым цветочком (дозиметр) -->
     <engine:VisualElement name="radiation-controls" class="radiation-controls">
-        <engine:Button name="btn-radiation-mode" text="MULTI" class="radiation-btn"/>
+        <engine:Button name="btn-radiation-mode" text="OFF" class="radiation-btn"/>
     </engine:VisualElement>
     
     <!-- ПРОГРЕСС РАДИАЦИИ ИГРОКА -->
@@ -82,4 +82,21 @@
         <engine:Button name="btn-mode" text="OFF" class="detector-btn detector-btn-mode"/>
         <engine:Button name="btn-power" text="PWR:1" class="detector-btn detector-btn-power"/>
     </engine:VisualElement>
+    <!-- Контейнер для визуальных приборов и фильтров внизу экрана -->
+<engine:VisualElement style="position: absolute; bottom: 20px; left: 0; right: 0; height: 40px; flex-direction: row; justify-content: center; align-items: center;">
+    <!-- Кнопка визуальных приборов -->
+    <engine:Button name="btn-visual-device" text="Visual: OFF" style="width: 400px; height: 40px; margin-right: 5px; font-size: 13px; -unity-font-style-and-weight: bold; border-radius: 5px; border-width: 2px; border-color: rgba(255, 200, 50, 0.8); background-color: rgba(50, 40, 40, 0.9); color: #fff;"/>
+    
+    <!-- Кнопка системы фильтрации -->
+    <engine:Button name="btn-filter-system" text="Filter: OFF" style="width: 400px; height: 40px; margin-left: 5px; font-size: 13px; -unity-font-style-and-weight: bold; border-radius: 5px; border-width: 2px; border-color: rgba(100, 255, 200, 0.8); background-color: rgba(40, 50, 50, 0.9); color: #fff;"/>
+</engine:VisualElement>
+
+<!-- Цифра НАД полосой радиации -->
+<engine:Label name="radiation-value-label" text="0" style="position: absolute; left: 10px; top: 800px; width: 40px; height: 25px; font-size: 16px; color: white; -unity-font-style-and-weight: bold; -unity-text-align: middle-center; background-color: rgba(0, 0, 0, 0.7); border-radius: 3px;"/>
+
+<!-- Цифра НАД полосой аккумулятора -->
+<engine:Label name="battery-value-label" text="100/100" style="position: absolute; right: 10px; top: 800px; width: 50px; height: 25px; font-size: 16px; color: white; -unity-font-style-and-weight: bold; -unity-text-align: middle-center; background-color: rgba(0, 0, 0, 0.7); border-radius: 3px;"/>
+
+
+
 </engine:UXML>
