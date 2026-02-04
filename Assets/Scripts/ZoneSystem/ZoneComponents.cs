@@ -1,6 +1,14 @@
 using Unity.Entities;
 using Unity.Mathematics;
 
+/// <summary>
+/// Состояние дебага событий (показать все события на карте)
+/// </summary>
+public struct EventDebugState : IComponentData
+{
+    public bool ShowAll; // показать все события, даже неоткрытые
+    public bool Dirty;   // 🔥 ДОБАВИТЬ: нужно обновить визуал
+}
 
 public struct RadiationDebugState : IComponentData
 {
@@ -8,13 +16,7 @@ public struct RadiationDebugState : IComponentData
     public bool Dirty;       // нужно ли пересчитать визуал
 }
 
-/// <summary>
-/// Состояние дебага событий (показать все события на карте)
-/// </summary>
-public struct EventDebugState : IComponentData
-{
-    public bool ShowAll;   // показать все события, даже неоткрытые
-}
+
 
 
 /// <summary>

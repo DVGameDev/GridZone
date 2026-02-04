@@ -147,7 +147,8 @@ public class ZoneUIController : MonoBehaviour
             UpdateLeftFlower(heroPos);
             UpdateRightFlower(heroPos);
             _lastHeroPos = heroPos;
-            MarkRadiationDirty();            
+            MarkRadiationDirty();
+            MarkEventsDirty();
             UpdateHeroRadiation();
         }
         
@@ -161,6 +162,16 @@ public class ZoneUIController : MonoBehaviour
 
         var e = query.GetSingletonEntity();
         var state = em.GetComponentData<RadiationDebugState>(e);
+        state.Dirty = true;
+        em.SetComponentData(e, state);
+    }
+    void MarkEventsDirty()
+    {
+        var em = World.DefaultGameObjectInjectionWorld.EntityManager;
+        var query = em.CreateEntityQuery(typeof(EventDebugState));
+        if (query.IsEmpty) return;
+        var e = query.GetSingletonEntity();
+        var state = em.GetComponentData<EventDebugState>(e);
         state.Dirty = true;
         em.SetComponentData(e, state);
     }
@@ -234,17 +245,16 @@ public class ZoneUIController : MonoBehaviour
         var em = World.DefaultGameObjectInjectionWorld.EntityManager;
         var query = em.CreateEntityQuery(typeof(EventDebugState));
         if (query.IsEmpty) return;
-
         var e = query.GetSingletonEntity();
         var state = em.GetComponentData<EventDebugState>(e);
-
         state.ShowAll = !state.ShowAll;
+        state.Dirty = true; // 🔥 ДОБАВИТЬ
         em.SetComponentData(e, state);
-
         _btnDebugEvents.text = state.ShowAll
             ? "🔒 Hide All Events"
             : "🔍 Show All Events";
     }
+
 
     /*
     void RevealAllRadiation()

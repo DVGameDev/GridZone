@@ -61,6 +61,13 @@ public partial class ZoneEventDiscoverySystem : SystemBase
                     }
 
                     Debug.Log($"[ZoneEventDiscovery] Discovered {eventElement.EventType} at {eventElement.GridPos}, visibility={eventElement.Visibility}");
+                    if (SystemAPI.HasSingleton<EventDebugState>())
+                    {
+                        var debugEntity = SystemAPI.GetSingletonEntity<EventDebugState>();
+                        var debugState = EntityManager.GetComponentData<EventDebugState>(debugEntity);
+                        debugState.Dirty = true;
+                        EntityManager.SetComponentData(debugEntity, debugState);
+                    }
                 }
             }
 
