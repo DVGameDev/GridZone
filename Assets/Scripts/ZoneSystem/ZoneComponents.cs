@@ -90,6 +90,15 @@ public struct HeroRadiationData : IComponentData
 }
 
 /// <summary>
+/// Данные аккумулятора героя (на entity юнита или синглтон)
+/// </summary>
+public struct BatteryData : IComponentData
+{
+    public float CurrentCharge; // Текущий заряд
+    public float MaxCharge;     // Максимальная ёмкость
+}
+
+/// <summary>
 /// Компонент спавнера ZONE (удаляется после генерации)
 /// </summary>
 public struct ZoneSpawnerComponent : IComponentData

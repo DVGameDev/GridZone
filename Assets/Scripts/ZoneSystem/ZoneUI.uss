@@ -76,6 +76,34 @@
   border-color: rgba(255, 150, 50, 0.8);
 }
 
+/* Кнопка управления дозиметром (левый цветочек) */
+.radiation-controls {
+  position: absolute;
+  left: 20px;
+  top: 340px;
+  flex-direction: row;
+  width: 300px;
+  height: 40px;
+}
+
+.radiation-btn {
+  width: 300px;
+  height: 40px;
+  margin: 0;
+  font-size: 14px;
+  -unity-font-style-and-weight: bold;
+  border-radius: 5px;
+  border-width: 2px;
+  border-color: rgba(100, 255, 100, 0.8);
+  background-color: rgba(40, 50, 40, 0.9);
+  color: #fff;
+}
+
+.radiation-btn:hover {
+  background-color: rgba(60, 80, 60, 0.95);
+  border-color: rgba(150, 255, 150, 0.9);
+}
+
 /* Кнопки отладки */
 .debug-btn-container {
   position: absolute;
@@ -135,6 +163,38 @@
   top: -22px;
   left: -10px;
   width: 40px;
+  text-align: center;
+  font-size: 12px;
+  color: white;
+  -unity-font-style-and-weight: bold;
+}
+
+/* Контейнер прогрессбара аккумулятора (справа) */
+.battery-bar-container {
+  position: absolute;
+  right: 340px;         /* Правая сторона, справа от цветка */
+  top: 340px;          
+  width: 40px;
+  height: 400px;
+  background-color: rgba(40, 40, 40, 0.8);
+  border-radius: 6px;
+  overflow: hidden;
+  justify-content: flex-end;
+}
+
+/* Заполнение аккумулятора */
+.battery-bar-fill {
+  width: 100%;
+  height: 100%;        /* По умолчанию полный заряд */
+  background-color: rgba(100, 200, 255, 0.9); /* Синий для энергии */
+}
+
+/* Подпись аккумулятора */
+.battery-bar-label {
+  position: absolute;
+  top: -22px;
+  left: -10px;
+  width: 60px;
   text-align: center;
   font-size: 12px;
   color: white;

@@ -53,6 +53,10 @@ public class ZoneSpawnerAuthoring : MonoBehaviour
     [Tooltip("Вероятность генерации ивента на клетке")]
     [Range(0f, 1f)] public float EventProbability = 0.02f;
 
+    [Header("Battery Settings")]
+    [Tooltip("Максимальная ёмкость аккумулятора")]
+    public float MaxBatteryCapacity = 100f;
+
     [Header("Grid Highlight Colors (для совместимости)")]
     [Tooltip("Эти цвета используются системами подсветки")]
     public Color ColorGray = new Color(0.5f, 0.5f, 0.5f, 0f);
@@ -136,6 +140,13 @@ public class ZoneSpawnerAuthoring : MonoBehaviour
             AddComponent(entity, new ZoneBaseGridColor
             {
                 Color = new float4(authoring.ColorGray.r, authoring.ColorGray.g, authoring.ColorGray.b, authoring.ColorGray.a)
+            });
+
+            // 7. Аккумулятор (синглтон для всей зоны)
+            AddComponent(entity, new BatteryData
+            {
+                CurrentCharge = authoring.MaxBatteryCapacity, // Изначально полный
+                MaxCharge = authoring.MaxBatteryCapacity
             });
 
 

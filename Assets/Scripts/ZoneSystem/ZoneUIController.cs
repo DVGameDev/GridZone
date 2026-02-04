@@ -15,6 +15,10 @@ public class ZoneUIController : MonoBehaviour
     public UIDocument uiDocument;
     VisualElement _radiationFill;
     Label _radiationLabel;
+    
+    // ── Аккумулятор ────────────────────────────────────────────────
+    VisualElement _batteryFill;
+    Label _batteryLabel;
 
     float _cachedRadiation = -1f;
 
@@ -28,6 +32,9 @@ public class ZoneUIController : MonoBehaviour
     private Button _btnPower;
     private Button _btnDebugRadiation;
     private Button _btnDebugEvents;
+    
+    // ── Кнопка режима дозиметра (левый цветочек) ──────────────────
+    private Button _btnRadiationMode;
 
     // ── cached ECS queries ────────────────────────────────────────
     private EntityManager _em;
@@ -40,9 +47,32 @@ public class ZoneUIController : MonoBehaviour
     private EntityQuery   _radiationConfigQuery;
 
     // ── детектор: режим и мощность ─────────────────────────────────
-    private enum DetectorMode { Off, MultiCell, ArcMode }
+    private enum DetectorMode { Off, MultiCell, SingleCell, ArcMode }
     private DetectorMode _mode = DetectorMode.Off;
     private int _power = 1; // 1..6
+    
+    // ── Энергопотребление детектора ──────────────────────────────
+    private static readonly float[] ModePowerCost = new float[] 
+    { 
+        0f,    // Off - не потребляет
+        2f,    // MultiCell - 2 энергии
+        1f,    // SingleCell - 1 энергия
+        3f     // ArcMode - 3 энергии
+    };
+    
+    // ── дозиметр: режим ─────────────────────────────────────────────
+    private enum RadiationMode { Off, MultiCell, PowerCell, SingleCell, ArcRad }
+    private RadiationMode _radiationMode = RadiationMode.MultiCell;
+    
+    // ── Энергопотребление дозиметра ──────────────────────────────
+    private static readonly float[] RadiationModeCost = new float[] 
+    { 
+        0f,    // Off - не потребляет
+        0f,    // MultiCell - бесплатно (базовый режим)
+        3f,    // PowerCell - 3 энергии
+        2f,    // SingleCell - 2 энергии
+        3f     // ArcRad - 3 энергии
+    };
     
     // ── отслеживание движения для обновления ОДИН РАЗ ───────────────
     private bool _wasMovingLastFrame = false;
@@ -93,6 +123,10 @@ public class ZoneUIController : MonoBehaviour
 
         _radiationFill = root.Q<VisualElement>("radiation-bar-fill");
         _radiationLabel = root.Q<Label>("radiation-bar-label");
+        
+        // Аккумулятор
+        _batteryFill = root.Q<VisualElement>("battery-bar-fill");
+        _batteryLabel = root.Q<Label>("battery-bar-label");
 
         // Кнопки управления
         _btnMode = root.Q<Button>("btn-mode");
@@ -100,6 +134,10 @@ public class ZoneUIController : MonoBehaviour
 
         _btnMode.clicked  += OnModeButtonClick;
         _btnPower.clicked += OnPowerButtonClick;
+        
+        // Кнопка режима дозиметра (левый цветочек)
+        _btnRadiationMode = root.Q<Button>("btn-radiation-mode");
+        _btnRadiationMode.clicked += OnRadiationModeButtonClick;
         
         // 🔥 Кнопки отладки
         _btnDebugRadiation = root.Q<Button>("btn-debug-radiation");
@@ -144,6 +182,12 @@ public class ZoneUIController : MonoBehaviour
         bool positionChanged = !heroPos.Equals(_lastHeroPos);        
         if (justStopped || (positionChanged && !isMovingNow))
         {
+            // Списываем энергию за перемещение
+            if (positionChanged && !heroPos.Equals(new int2(-9999, -9999)))
+            {
+                ConsumeBatteryForMovement();
+            }
+            
             UpdateLeftFlower(heroPos);
             UpdateRightFlower(heroPos);
             _lastHeroPos = heroPos;
@@ -151,6 +195,9 @@ public class ZoneUIController : MonoBehaviour
             MarkEventsDirty();
             UpdateHeroRadiation();
         }
+        
+        // Обновляем UI аккумулятора
+        UpdateBatteryUI();
         
         _wasMovingLastFrame = isMovingNow;
     }
@@ -181,8 +228,18 @@ public class ZoneUIController : MonoBehaviour
     // ══════════════════════════════════════════════════════════════
     void OnModeButtonClick()
     {
-        // Цикл: Off → MultiCell → ArcMode → Off
-        _mode = (DetectorMode)(((int)_mode + 1) % 3);
+        // Проверяем наличие энергии для переключения
+        var newMode = (DetectorMode)(((int)_mode + 1) % 4);
+        float cost = ModePowerCost[(int)newMode];
+        
+        if (!ConsumeBattery(cost))
+        {
+            Debug.Log("Недостаточно энергии для переключения режима!");
+            return;
+        }
+        
+        // Цикл: Off → MultiCell → SingleCell → ArcMode → Off
+        _mode = newMode;
         UpdateButtonLabels();
         int2 heroPos;
         if (!TryGetHeroPos(out heroPos)) return;
@@ -197,6 +254,26 @@ public class ZoneUIController : MonoBehaviour
         int2 heroPos;
         if (!TryGetHeroPos(out heroPos)) return;
         UpdateRightFlower(heroPos);
+    }
+    
+    void OnRadiationModeButtonClick()
+    {
+        // Проверяем наличие энергии для переключения
+        var newMode = (RadiationMode)(((int)_radiationMode + 1) % 5);
+        float cost = RadiationModeCost[(int)newMode];
+        
+        if (!ConsumeBattery(cost))
+        {
+            Debug.Log("Недостаточно энергии для переключения режима дозиметра!");
+            return;
+        }
+        
+        // Цикл: Off → MultiCell → PowerCell → SingleCell → ArcRad → Off
+        _radiationMode = newMode;
+        UpdateButtonLabels();
+        int2 heroPos;
+        if (!TryGetHeroPos(out heroPos)) return;
+        UpdateLeftFlower(heroPos);
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -357,19 +434,64 @@ public class ZoneUIController : MonoBehaviour
 
     void UpdateButtonLabels()
     {
+        // Детектор (правый цветочек)
+        string modeText = "";
+        float cost = ModePowerCost[(int)_mode];
+        
         switch (_mode)
         {
-            case DetectorMode.Off:       _btnMode.text = "OFF";  break;
-            case DetectorMode.MultiCell: _btnMode.text = "MULTI"; break;
-            case DetectorMode.ArcMode:   _btnMode.text = "ARC";  break;
+            case DetectorMode.Off:       modeText = "OFF";  break;
+            case DetectorMode.MultiCell: modeText = "MULTI"; break;
+            case DetectorMode.SingleCell: modeText = "SINGLE"; break;
+            case DetectorMode.ArcMode:   modeText = "ARC";  break;
         }
+        
+        _btnMode.text = cost > 0 ? $"{modeText} (-{cost}⚡)" : modeText;
         _btnPower.text = $"PWR:{_power}";
+        
+        // Дозиметр (левый цветочек)
+        string radModeText = "";
+        float radCost = RadiationModeCost[(int)_radiationMode];
+        
+        switch (_radiationMode)
+        {
+            case RadiationMode.Off:       radModeText = "OFF";   break;
+            case RadiationMode.MultiCell: radModeText = "MULTI"; break;
+            case RadiationMode.PowerCell: radModeText = "POWER"; break;
+            case RadiationMode.SingleCell: radModeText = "SINGLE"; break;
+            case RadiationMode.ArcRad:    radModeText = "ARC";   break;
+        }
+        
+        _btnRadiationMode.text = radCost > 0 ? $"{radModeText} (-{radCost}⚡)" : radModeText;
     }
     
     // ══════════════════════════════════════════════════════════════
-    //  ЛЕВЫЙ ЦВЕТОЧЕК — радиация
+    //  ЛЕВЫЙ ЦВЕТОЧЕК — радиация (дозиметр)
     // ══════════════════════════════════════════════════════════════
     void UpdateLeftFlower(int2 heroPos)
+    {
+        switch (_radiationMode)
+        {
+            case RadiationMode.Off:       DrawRadiationOff();                  break;
+            case RadiationMode.MultiCell: DrawRadiationMultiCell(heroPos);     break;
+            case RadiationMode.PowerCell: DrawRadiationPowerCell(heroPos);     break;
+            case RadiationMode.SingleCell: DrawRadiationSingleCell(heroPos);   break;
+            case RadiationMode.ArcRad:    DrawRadiationArcRad(heroPos);        break;
+        }
+    }
+    
+    // ── OFF режим дозиметра ────────────────────────────────────────
+    void DrawRadiationOff()
+    {
+        for (int i = 0; i < 7; i++)
+        {
+            _leftHexes[i].style.backgroundColor = ColorOff;
+            _leftLabels[i].text = "";
+        }
+    }
+    
+    // ── MULTI CELL режим (базовый, как было раньше) ────────────────
+    void DrawRadiationMultiCell(int2 heroPos)
     {
         if (_radiationConfigQuery.IsEmpty) return;
 
@@ -389,6 +511,184 @@ public class ZoneUIController : MonoBehaviour
             _leftHexes[i].style.backgroundColor = GetRadiationColor(rad, config);
         }
     }
+    
+    // ── POWER CELL режим ───────────────────────────────────────────
+    // Показывает направления, где радиация СИЛЬНЕЕ чем на текущей клетке
+    void DrawRadiationPowerCell(int2 heroPos)
+    {
+        if (_radiationConfigQuery.IsEmpty) return;
+
+        var mapEntity = _mapQuery.GetSingletonEntity();
+        if (!_em.HasBuffer<ZoneCellRadiation>(mapEntity)) return;
+
+        var buf    = _em.GetBuffer<ZoneCellRadiation>(mapEntity, true);
+        var config = _radiationConfigQuery.GetSingleton<ZoneRadiationConfig>();
+        var grid   = _gridConfigQuery.GetSingleton<GridConfig>();
+
+        // Получаем радиацию текущей клетки (центр)
+        int currentRad = GetRadiationAt(heroPos, buf, grid.GridSize);
+        
+        // Центр показывает текущую радиацию
+        _leftLabels[0].text = currentRad >= 0 ? currentRad.ToString() : "—";
+        _leftHexes[0].style.backgroundColor = GetRadiationColor(currentRad, config);
+
+        // Для каждого направления проверяем, есть ли там более высокая радиация
+        for (int i = 1; i < 7; i++)
+        {
+            int2 pos = heroPos + HexOffsets[i];
+            int  rad = GetRadiationAt(pos, buf, grid.GridSize);
+
+            if (rad > currentRad && rad >= 0)
+            {
+                // Радиация сильнее - закрашиваем лепесток
+                _leftLabels[i].text = rad.ToString();
+                _leftHexes[i].style.backgroundColor = GetRadiationColor(rad, config);
+            }
+            else
+            {
+                // Радиация такая же или слабее - серый
+                _leftLabels[i].text = "";
+                _leftHexes[i].style.backgroundColor = ColorOff;
+            }
+        }
+    }
+    
+    // ── SINGLE CELL режим ──────────────────────────────────────────
+    // Показывает ОДНУ случайную клетку из тех, где радиация выше
+    void DrawRadiationSingleCell(int2 heroPos)
+    {
+        if (_radiationConfigQuery.IsEmpty) return;
+
+        var mapEntity = _mapQuery.GetSingletonEntity();
+        if (!_em.HasBuffer<ZoneCellRadiation>(mapEntity)) return;
+
+        var buf    = _em.GetBuffer<ZoneCellRadiation>(mapEntity, true);
+        var config = _radiationConfigQuery.GetSingleton<ZoneRadiationConfig>();
+        var grid   = _gridConfigQuery.GetSingleton<GridConfig>();
+
+        // Получаем радиацию текущей клетки
+        int currentRad = GetRadiationAt(heroPos, buf, grid.GridSize);
+        
+        // Центр показывает текущую радиацию
+        _leftLabels[0].text = currentRad >= 0 ? currentRad.ToString() : "—";
+        _leftHexes[0].style.backgroundColor = GetRadiationColor(currentRad, config);
+
+        // Собираем все направления с более высокой радиацией
+        var higherRadDirections = new System.Collections.Generic.List<int>();
+        for (int i = 1; i < 7; i++)
+        {
+            int2 pos = heroPos + HexOffsets[i];
+            int  rad = GetRadiationAt(pos, buf, grid.GridSize);
+
+            if (rad > currentRad && rad >= 0)
+            {
+                higherRadDirections.Add(i);
+            }
+        }
+
+        // Сбрасываем все лепестки в серый
+        for (int i = 1; i < 7; i++)
+        {
+            _leftHexes[i].style.backgroundColor = ColorOff;
+            _leftLabels[i].text = "";
+        }
+
+        // Если есть направления с высокой радиацией - показываем одно случайное
+        if (higherRadDirections.Count > 0)
+        {
+            int randomIndex = higherRadDirections[UnityEngine.Random.Range(0, higherRadDirections.Count)];
+            int2 pos = heroPos + HexOffsets[randomIndex];
+            int  rad = GetRadiationAt(pos, buf, grid.GridSize);
+            
+            _leftLabels[randomIndex].text = rad.ToString();
+            _leftHexes[randomIndex].style.backgroundColor = GetRadiationColor(rad, config);
+        }
+    }
+    
+    // ── ARC RAD режим ──────────────────────────────────────────────
+    // Как SingleCell, но добавляет 2 случайных соседних лепестка
+    void DrawRadiationArcRad(int2 heroPos)
+    {
+        if (_radiationConfigQuery.IsEmpty) return;
+
+        var mapEntity = _mapQuery.GetSingletonEntity();
+        if (!_em.HasBuffer<ZoneCellRadiation>(mapEntity)) return;
+
+        var buf    = _em.GetBuffer<ZoneCellRadiation>(mapEntity, true);
+        var config = _radiationConfigQuery.GetSingleton<ZoneRadiationConfig>();
+        var grid   = _gridConfigQuery.GetSingleton<GridConfig>();
+
+        // Получаем радиацию текущей клетки
+        int currentRad = GetRadiationAt(heroPos, buf, grid.GridSize);
+        
+        // Центр показывает текущую радиацию
+        _leftLabels[0].text = currentRad >= 0 ? currentRad.ToString() : "—";
+        _leftHexes[0].style.backgroundColor = GetRadiationColor(currentRad, config);
+
+        // Собираем все направления с более высокой радиацией
+        var higherRadDirections = new System.Collections.Generic.List<int>();
+        for (int i = 1; i < 7; i++)
+        {
+            int2 pos = heroPos + HexOffsets[i];
+            int  rad = GetRadiationAt(pos, buf, grid.GridSize);
+
+            if (rad > currentRad && rad >= 0)
+            {
+                higherRadDirections.Add(i);
+            }
+        }
+
+        // Сбрасываем все лепестки в серый
+        for (int i = 1; i < 7; i++)
+        {
+            _leftHexes[i].style.backgroundColor = ColorOff;
+            _leftLabels[i].text = "";
+        }
+
+        // Если есть направления с высокой радиацией
+        if (higherRadDirections.Count > 0)
+        {
+            int mainDir = higherRadDirections[UnityEngine.Random.Range(0, higherRadDirections.Count)];
+            int2 mainPos = heroPos + HexOffsets[mainDir];
+            int  mainRad = GetRadiationAt(mainPos, buf, grid.GridSize);
+            
+            // Показываем основное направление
+            _leftLabels[mainDir].text = mainRad.ToString();
+            _leftHexes[mainDir].style.backgroundColor = GetRadiationColor(mainRad, config);
+            
+            // Добавляем 2 соседних лепестка (алгоритм как в ArcMode детектора)
+            int left = ((mainDir - 2 + 6) % 6) + 1;
+            int right = (mainDir % 6) + 1;
+
+            // Рандом: 50/50 выбрать стиль подсветки
+            if (UnityEngine.Random.value < 0.5f)
+            {
+                // вариант 1: подсвечиваем сразу слева и справа
+                int2 leftPos = heroPos + HexOffsets[left];
+                int2 rightPos = heroPos + HexOffsets[right];
+                int leftRad = GetRadiationAt(leftPos, buf, grid.GridSize);
+                int rightRad = GetRadiationAt(rightPos, buf, grid.GridSize);
+                
+                _leftHexes[left].style.backgroundColor = GetRadiationColor(leftRad, config);
+                _leftHexes[right].style.backgroundColor = GetRadiationColor(rightRad, config);
+            }
+            else
+            {
+                // вариант 2: подсвечиваем две подряд идущие позиции с любой стороны
+                int dir = UnityEngine.Random.value < 0.5f ? 1 : -1;
+                int idx1 = (mainDir + dir - 1 + 6) % 6 + 1;
+                int idx2 = (mainDir + 2 * dir - 1 + 6) % 6 + 1;
+
+                int2 pos1 = heroPos + HexOffsets[idx1];
+                int2 pos2 = heroPos + HexOffsets[idx2];
+                int rad1 = GetRadiationAt(pos1, buf, grid.GridSize);
+                int rad2 = GetRadiationAt(pos2, buf, grid.GridSize);
+                
+                _leftHexes[idx1].style.backgroundColor = GetRadiationColor(rad1, config);
+                _leftHexes[idx2].style.backgroundColor = GetRadiationColor(rad2, config);
+            }
+        }
+    }
 
     // ══════════════════════════════════════════════════════════════
     //  ПРАВЫЙ ЦВЕТОЧЕК — детектор
@@ -399,6 +699,7 @@ public class ZoneUIController : MonoBehaviour
         {
             case DetectorMode.Off:       DrawDetectorOff();                  break;
             case DetectorMode.MultiCell: DrawDetectorMultiCell(heroPos);    break;
+            case DetectorMode.SingleCell: DrawDetectorSingleCell(heroPos);  break;
             case DetectorMode.ArcMode:   DrawDetectorArcMode(heroPos);      break;
         }
     }
@@ -663,5 +964,128 @@ public class ZoneUIController : MonoBehaviour
         else                                   c = new Color(cfg.ColorRed.x,     cfg.ColorRed.y,     cfg.ColorRed.z);
         c.a = 0.8f;
         return c;
+    }
+    
+    // ══════════════════════════════════════════════════════════════
+    //  SINGLE CELL РЕЖИМ
+    // ══════════════════════════════════════════════════════════════
+    /// <summary>
+    /// SingleCell режим - показывает только одну самую близкую аномалию с направлением и дальностью
+    /// </summary>
+    void DrawDetectorSingleCell(int2 heroPos)
+    {
+        var mapEntity = _mapQuery.GetSingletonEntity();
+        if (!_em.HasBuffer<ZoneEventElement>(mapEntity))
+        {
+            DrawDetectorOff();
+            return;
+        }
+
+        var events = _em.GetBuffer<ZoneEventElement>(mapEntity, true);
+        var grid   = _gridConfigQuery.GetSingleton<GridConfig>();
+
+        // 1. Ищем самую близкую аномалию во всех направлениях
+        int nearestDist = -1;
+        int nearestDir  = -1; // индекс направления 1..6
+
+        for (int i = 1; i < 7; i++)
+        {
+            int dist = ScanDirectionWithPower(heroPos, HexOffsets[i], events, grid.GridSize);
+            if (dist >= 0 && (nearestDist < 0 || dist < nearestDist))
+            {
+                nearestDist = dist;
+                nearestDir  = i;
+            }
+        }
+
+        // 2. Сбрасываем всё в серый
+        for (int i = 0; i < 7; i++)
+        {
+            _rightHexes[i].style.backgroundColor = ColorOff;
+            _rightLabels[i].text = "";
+        }
+
+        // Если ничего не найдено — конец
+        if (nearestDir < 0)
+        {
+            _rightLabels[0].text = "—";
+            return;
+        }
+
+        // 3. Центр показывает расстояние
+        _rightLabels[0].text = nearestDist.ToString();
+        _rightHexes[0].style.backgroundColor = GetAnomalyDistColor(nearestDist);
+
+        // 4. Подсвечиваем ТОЛЬКО точный лепесток направления
+        _rightHexes[nearestDir].style.backgroundColor = GetAnomalyDistColor(nearestDist);
+    }
+    
+    // ══════════════════════════════════════════════════════════════
+    //  УПРАВЛЕНИЕ АККУМУЛЯТОРОМ
+    // ══════════════════════════════════════════════════════════════
+    
+    /// <summary>
+    /// Списывает энергию с аккумулятора. Возвращает true если успешно, false если энергии не хватило
+    /// </summary>
+    bool ConsumeBattery(float amount)
+    {
+        if (amount <= 0) return true;
+        
+        var query = _em.CreateEntityQuery(typeof(BatteryData), typeof(ZoneModeTag));
+        if (query.IsEmpty) return false;
+        
+        var entity = query.GetSingletonEntity();
+        var battery = _em.GetComponentData<BatteryData>(entity);
+        
+        if (battery.CurrentCharge < amount)
+        {
+            // Недостаточно энергии
+            return false;
+        }
+        
+        battery.CurrentCharge -= amount;
+        if (battery.CurrentCharge < 0) battery.CurrentCharge = 0;
+        
+        _em.SetComponentData(entity, battery);
+        return true;
+    }
+    
+    /// <summary>
+    /// Списывает энергию за перемещение героя (1 энергия за клетку)
+    /// </summary>
+    void ConsumeBatteryForMovement()
+    {
+        ConsumeBattery(1f);
+    }
+    
+    /// <summary>
+    /// Обновляет UI прогресс-бара аккумулятора
+    /// </summary>
+    void UpdateBatteryUI()
+    {
+        var query = _em.CreateEntityQuery(typeof(BatteryData), typeof(ZoneModeTag));
+        if (query.IsEmpty) return;
+        
+        var battery = query.GetSingleton<BatteryData>();
+        
+        float percentage = battery.CurrentCharge / battery.MaxCharge;
+        percentage = Mathf.Clamp01(percentage);
+        
+        // Обновляем высоту заполнения
+        _batteryFill.style.height = Length.Percent(percentage * 100f);
+        
+        // Обновляем текст
+        _batteryLabel.text = $"{Mathf.RoundToInt(battery.CurrentCharge)}⚡";
+        
+        // Меняем цвет в зависимости от заряда
+        Color fillColor;
+        if (percentage > 0.5f)
+            fillColor = new Color(0.4f, 0.8f, 1f, 0.9f); // Синий - полный
+        else if (percentage > 0.25f)
+            fillColor = new Color(1f, 0.8f, 0.2f, 0.9f); // Желтый - средний
+        else
+            fillColor = new Color(1f, 0.3f, 0.2f, 0.9f); // Красный - низкий
+        
+        _batteryFill.style.backgroundColor = fillColor;
     }
 }

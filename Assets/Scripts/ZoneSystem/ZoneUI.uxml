@@ -30,6 +30,12 @@
             <engine:Label name="left-label-6" text="6" class="hex-label"/>
         </engine:VisualElement>
     </engine:VisualElement>
+    
+    <!-- КНОПКА УПРАВЛЕНИЯ под левым цветочком (дозиметр) -->
+    <engine:VisualElement name="radiation-controls" class="radiation-controls">
+        <engine:Button name="btn-radiation-mode" text="MULTI" class="radiation-btn"/>
+    </engine:VisualElement>
+    
     <!-- ПРОГРЕСС РАДИАЦИИ ИГРОКА -->
 <engine:VisualElement name="radiation-bar-container" class="radiation-bar-container">
     <engine:VisualElement name="radiation-bar-fill" class="radiation-bar-fill"/>
@@ -38,6 +44,12 @@
     <!-- КНОПКА ОТЛАДКИ ДЛЯ СОБЫТИЙ -->
     <engine:VisualElement name="debug-events-container" class="debug-btn-container debug-btn-right">
         <engine:Button name="btn-debug-events" text="🔍 Show All Events" class="debug-btn"/>
+    </engine:VisualElement>
+    
+    <!-- ПРОГРЕСС АККУМУЛЯТОРА (справа под цветком) -->
+    <engine:VisualElement name="battery-bar-container" class="battery-bar-container">
+        <engine:VisualElement name="battery-bar-fill" class="battery-bar-fill"/>
+        <engine:Label name="battery-bar-label" text="100%" class="battery-bar-label"/>
     </engine:VisualElement>
     
     <!-- ПРАВЫЙ ЦВЕТОЧЕК: детектор аномалий -->
