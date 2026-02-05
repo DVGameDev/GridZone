@@ -99,7 +99,7 @@ public class ZoneUIController : MonoBehaviour
     {
         0f,  // Off - не потребляет
         2f,  // EVBinoculars - 2 энергии
-        6f   // ThermoImager - 4 энергии
+        4f   // ThermoImager - 4 энергии
     };
 
     // ── Бонус к обнаружению от визуальных приборов ────────────────
@@ -107,7 +107,7 @@ public class ZoneUIController : MonoBehaviour
     {
         0,  // Off - без бонуса
         1,  // EVBinoculars - +1 к обнаружению
-        3   // ThermoImager - +3 к обнаружению
+        2   // ThermoImager - +3 к обнаружению
     };
 
     // ── система очистки фильтров ────────────────────────────────────

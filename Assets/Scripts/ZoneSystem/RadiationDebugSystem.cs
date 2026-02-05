@@ -30,10 +30,11 @@ public partial class RadiationColorSystem : SystemBase
 
         var revealAll = debug.ValueRO.RevealAll;
 
-        var colorLookup =
-            GetComponentLookup<URPMaterialPropertyBaseColor>(false);
-        var customLookup =
-            GetComponentLookup<CellCustomColor>(false);
+        var colorLookup = GetComponentLookup<URPMaterialPropertyBaseColor>(false);
+        var customLookup = GetComponentLookup<CellCustomColor>(false);
+
+        colorLookup.Update(this);
+        customLookup.Update(this);
 
         // 🔥 ИСПРАВЛЕНО: Берем базовый цвет с GridMap вместо ZoneSpawnerComponent
         if (!EntityManager.HasComponent<ZoneBaseGridColor>(mapEntity))

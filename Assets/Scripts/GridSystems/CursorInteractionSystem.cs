@@ -1,4 +1,4 @@
-﻿using Unity.Collections;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Physics;
 using Unity.Physics.Systems;
@@ -207,7 +207,8 @@ public partial class CursorInteractionSystem : SystemBase
                             case UnitLayer.Sky: occupant = cell.OccupantSky; break;
                         }
 
-                        if (isOccupied && occupant != context.SelectedUnit)
+                        // 🔥 ИСПРАВЛЕНИЕ: в режиме зоны не показываем препятствия черным
+                        if (!context.IsZoneMode && isOccupied && occupant != context.SelectedUnit)
                             restoreColor = context.Colors.ColorBlack;
                         else
                             restoreColor = context.Colors.ColorBlue;
@@ -251,8 +252,8 @@ public partial class CursorInteractionSystem : SystemBase
         // 🔥 ДЛЯ MOVE-РЕЖИМА: при восстановлении базового цвета
         if (context.Mode == InteractionMode.Move)
         {
-            // если клетка занята – черный
-            if (GridUtils.IsCellOccupied(data, context.Layer))
+            // 🔥 ИСПРАВЛЕНИЕ: в режиме зоны не показываем препятствия черным
+            if (!context.IsZoneMode && GridUtils.IsCellOccupied(data, context.Layer))
                 return context.Colors.ColorBlack;
 
             // если клетка подсвечена (входит в move area) – синий
@@ -433,7 +434,7 @@ public partial class CursorInteractionSystem : SystemBase
             anchorIdx = HexGridUtils.HexToIndex(hitCoords, context.GridSize);
         else
             anchorIdx = hitCoords.x * context.GridSize.y + hitCoords.y;
-            
+
         if (anchorIdx < 0 || anchorIdx >= context.MapBuffer.Length || !context.MapBuffer[anchorIdx].IsHighlighted)
             data.IsValidAnchor = false;
     }
@@ -462,21 +463,47 @@ public partial class CursorInteractionSystem : SystemBase
 
         foreach (var offset in data.Offsets.AsArray())
         {
-            int tx = hitCoords.x + offset.x;
-            int ty = hitCoords.y + offset.y;
-            if (tx < 0 || tx >= context.GridSize.x || ty < 0 || ty >= context.GridSize.y)
-                continue;
-
-            // 🔥 Универсальная индексация
-            int index;
+            // 🔥 ИСПРАВЛЕНИЕ: правильная работа с координатами для hex
+            int2 targetPos;
             if (context.Config.Layout == GridLayoutType.HexFlatTop)
             {
-                index = HexGridUtils.HexToIndex(new int2(tx, ty), context.GridSize);
+                // Для hex: offset в axial пространстве
+                targetPos = hitCoords + offset;
             }
             else
             {
-                index = tx * context.GridSize.y + ty;
+                // Для quad: обычное сложение
+                targetPos = new int2(hitCoords.x + offset.x, hitCoords.y + offset.y);
             }
+
+            // Проверяем границы через offset координаты
+            int2 offsetCoords;
+            if (context.Config.Layout == GridLayoutType.HexFlatTop)
+            {
+                offsetCoords = HexGridUtils.AxialToOffset(targetPos);
+            }
+            else
+            {
+                offsetCoords = targetPos;
+            }
+
+            if (offsetCoords.x < 0 || offsetCoords.x >= context.GridSize.x ||
+                offsetCoords.y < 0 || offsetCoords.y >= context.GridSize.y)
+                continue;
+
+            // 🔥 ИСПРАВЛЕНИЕ: используем правильную индексацию через offset
+            int index;
+            if (context.Config.Layout == GridLayoutType.HexFlatTop)
+            {
+                index = HexGridUtils.OffsetToIndex(offsetCoords, context.GridSize);
+            }
+            else
+            {
+                index = targetPos.x * context.GridSize.y + targetPos.y;
+            }
+
+            if (index < 0 || index >= context.MapBuffer.Length)
+                continue;
 
             var cell = context.MapBuffer[index];
 
@@ -523,7 +550,7 @@ public partial class CursorInteractionSystem : SystemBase
 
     private void HandleMoveInput(InteractionContext context, CursorData data, int2 hitCoords, bool isRotateClick, bool isActionClick)
     {
-        int2 unitPos = EntityManager.GetComponentData<GridCoordinates>(context.SelectedUnit).Value; 
+        int2 unitPos = EntityManager.GetComponentData<GridCoordinates>(context.SelectedUnit).Value;
         int2 currentSize = GridUtils.GetCurrentUnitSize(EntityManager, context.SelectedUnit);
         int2 currentFacing = EntityManager.GetComponentData<UnitFacing>(context.SelectedUnit).Value;
 
@@ -575,22 +602,47 @@ public partial class CursorInteractionSystem : SystemBase
 
         foreach (var offset in data.Offsets.AsArray())
         {
-            int tx = hitCoords.x + offset.x;
-            int ty = hitCoords.y + offset.y;
-
-            if (tx < 0 || tx >= context.GridSize.x || ty < 0 || ty >= context.GridSize.y)
-                continue;
-
-            // 🔥 Универсальная индексация
-            int index;
+            // 🔥 ИСПРАВЛЕНИЕ: правильная работа с координатами для hex
+            int2 targetPos;
             if (context.Config.Layout == GridLayoutType.HexFlatTop)
             {
-                index = HexGridUtils.HexToIndex(new int2(tx, ty), context.GridSize);
+                // Для hex: offset в axial пространстве
+                targetPos = hitCoords + offset;
             }
             else
             {
-                index = tx * context.GridSize.y + ty;
+                // Для quad: обычное сложение
+                targetPos = new int2(hitCoords.x + offset.x, hitCoords.y + offset.y);
             }
+
+            // Проверяем границы через offset координаты
+            int2 offsetCoords;
+            if (context.Config.Layout == GridLayoutType.HexFlatTop)
+            {
+                offsetCoords = HexGridUtils.AxialToOffset(targetPos);
+            }
+            else
+            {
+                offsetCoords = targetPos;
+            }
+
+            if (offsetCoords.x < 0 || offsetCoords.x >= context.GridSize.x ||
+                offsetCoords.y < 0 || offsetCoords.y >= context.GridSize.y)
+                continue;
+
+            // 🔥 ИСПРАВЛЕНИЕ: используем правильную индексацию через offset
+            int index;
+            if (context.Config.Layout == GridLayoutType.HexFlatTop)
+            {
+                index = HexGridUtils.OffsetToIndex(offsetCoords, context.GridSize);
+            }
+            else
+            {
+                index = targetPos.x * context.GridSize.y + targetPos.y;
+            }
+
+            if (index < 0 || index >= context.MapBuffer.Length)
+                continue;
 
             var cell = context.MapBuffer[index];
 

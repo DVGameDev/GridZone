@@ -135,7 +135,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &290855526
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -143,7 +143,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 290855525}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b4549507c620e7c43a84180a4c6aedfe, type: 3}
   m_Name: 
@@ -258,7 +258,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!64 &506392310
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -369,7 +369,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1760402134
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -395,19 +395,19 @@ MonoBehaviour:
   ColorYellow: {r: 1, g: 0.92, b: 0.016, a: 0.3}
   ColorOrange: {r: 1, g: 0.5, b: 0, a: 0.3}
   ColorRed: {r: 1, g: 0, b: 0, a: 0.3}
-  GreenProbability: 0.15
+  GreenProbability: 0.5
   GreenSizeMin: 2
   GreenSizeMax: 5
-  OrangeProbability: 0.1
+  OrangeProbability: 0.15
   OrangeSizeMin: 2
   OrangeSizeMax: 5
-  RedProbability: 0.05
+  RedProbability: 0.1
   RedSizeMin: 1
   RedSizeMax: 3
   AnomalyProbability: 0.05
   FightProbability: 0.03
   EventProbability: 0.02
-  MaxBatteryCapacity: 300
+  MaxBatteryCapacity: 500
   ColorGray: {r: 0, g: 0, b: 0, a: 0}
   ColorBlue: {r: 0, g: 0, b: 1, a: 0.1254902}
   ColorBlack: {r: 0, g: 0, b: 0, a: 0.8}

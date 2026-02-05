@@ -1,4 +1,4 @@
-﻿using Unity.Collections;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Rendering;
@@ -16,7 +16,7 @@ public partial class GridHighlightSystem : SystemBase
     // Кэш подсвеченных клеток
     private NativeList<Entity> _highlightedCells;
 
-   
+
 
     protected override void OnCreate()
     {
@@ -53,7 +53,7 @@ public partial class GridHighlightSystem : SystemBase
         if (unitValid)
         {
             //Debug.Log($"=== UNIT DEBUG ===");
-           // Debug.Log($"SelectedUnit Index: {selectedUnit.Index}");
+            // Debug.Log($"SelectedUnit Index: {selectedUnit.Index}");
 
             if (EntityManager.HasComponent<GridCoordinates>(selectedUnit))
             {
@@ -62,7 +62,7 @@ public partial class GridHighlightSystem : SystemBase
             }
             else
             {
-               // Debug.LogError("NO GridCoordinates on unit!");
+                // Debug.LogError("NO GridCoordinates on unit!");
                 return;
             }
 
@@ -70,10 +70,10 @@ public partial class GridHighlightSystem : SystemBase
             //Debug.Log($"Config GridSize: {config.GridSize}");
             //Debug.Log($"Config Layout: {config.Layout}");
             //Debug.Log($"=================");
-        
 
 
-        if (EntityManager.HasComponent<UnitLayerData>(selectedUnit))
+
+            if (EntityManager.HasComponent<UnitLayerData>(selectedUnit))
                 currentLayer = EntityManager.GetComponentData<UnitLayerData>(selectedUnit).Value;
 
             if (EntityManager.HasComponent<UnitSize>(selectedUnit))
@@ -129,16 +129,16 @@ public partial class GridHighlightSystem : SystemBase
     private void ClearPreviousHighlights(DynamicBuffer<GridCellElement> buffer, int2 gridSize, UnitLayer viewerLayer, bool showObstacles, GridColorConfig colors)
     {
         var config = SystemAPI.GetSingleton<GridConfig>();
-        
+
         // 🔥 Проверяем ZONE режим
         bool isZoneMode = SystemAPI.HasSingleton<ZoneModeTag>();
-        
+
         foreach (var cellEntity in _highlightedCells)
         {
             if (!EntityManager.Exists(cellEntity)) continue;
 
             var coords = EntityManager.GetComponentData<GridCoordinates>(cellEntity);
-            
+
             // 🔥 ИСПРАВЛЕНИЕ: используем правильную индексацию в зависимости от layout
             int index;
             if (config.Layout == GridLayoutType.HexFlatTop)
@@ -194,7 +194,7 @@ public partial class GridHighlightSystem : SystemBase
                     index = HexGridUtils.HexToIndex(pos, gridSize);
                 else
                     index = pos.x * gridSize.y + pos.y;
-                    
+
                 var cell = buffer[index];
                 cell.IsHighlighted = true;
                 buffer[index] = cell;
@@ -249,9 +249,13 @@ public partial class GridHighlightSystem : SystemBase
 
             // Определяем цвет
             float4 color;
-            if (isOccupied && occupant != ignoreUnit)
+
+            // 🔥 ИСПРАВЛЕНИЕ: проверяем режим зоны
+            bool isZoneMode = SystemAPI.HasSingleton<ZoneModeTag>();
+
+            if (!isZoneMode && isOccupied && occupant != ignoreUnit)
             {
-                color = colors.ColorBlack; // 🔥 ЧЕРНЫЙ для препятствий
+                color = colors.ColorBlack; // 🔥 ЧЕРНЫЙ для препятствий (только НЕ в зоне)
             }
             else
             {
@@ -303,9 +307,12 @@ public partial class GridHighlightSystem : SystemBase
                             bool isOccupied = IsCellOccupied(cell, layer);
                             float4 color;
 
-                            if (isOccupied && occupant != ignoreUnit)
+                            // 🔥 ИСПРАВЛЕНИЕ: проверяем режим зоны
+                            bool isZoneMode = SystemAPI.HasSingleton<ZoneModeTag>();
+
+                            if (!isZoneMode && isOccupied && occupant != ignoreUnit)
                             {
-                                color = colors.ColorBlack; // Черный для препятствий
+                                color = colors.ColorBlack; // Черный для препятствий (только НЕ в зоне)
                             }
                             else
                             {

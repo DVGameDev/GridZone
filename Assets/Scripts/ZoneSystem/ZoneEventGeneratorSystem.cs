@@ -59,7 +59,7 @@ public partial struct ZoneEventGeneratorSystem : ISystem
 
             if (eventType == ZoneEventType.None) continue;
 
-            int visibility = random.NextInt(0, 4);
+            int visibility = 1; //random.NextInt(0, 4);
             float3 worldPos = HexGridUtils.HexAxialToWorld(gridPos, gridConfig.Spacing);
             worldPos.y = 1.0f;
 

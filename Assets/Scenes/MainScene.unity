@@ -136,7 +136,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &62434867
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -246,8 +246,8 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
-  far clip plane: 50
+  near clip plane: 0.01
+  far clip plane: 1000
   field of view: 60
   orthographic: 0
   orthographic size: 5
@@ -338,13 +338,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OrbitCamera
   Target: {x: 6, y: 0, z: -6}
-  Distance: 10
+  Distance: 20
   Height: 15
-  Angle: 45
+  Angle: 60
   RotationSpeed: 50
   ZoomSpeed: 5
   MinDistance: 5
-  MaxDistance: 50
+  MaxDistance: 100
   MoveSpeed: 10
   FarClipPlane: 10000
   UseOrthographic: 0
@@ -594,7 +594,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &928330330
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -649,7 +649,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!64 &1176851297
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -808,7 +808,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1541819326
 MonoBehaviour:
   m_ObjectHideFlags: 0
