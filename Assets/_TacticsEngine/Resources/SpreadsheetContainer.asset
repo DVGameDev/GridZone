@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 875e5b705506ec145b57214908fc2255, type: 3}
+  m_Name: SpreadsheetContainer
+  m_EditorClassIdentifier: Assembly-CSharp::SpreadshetContent/UnitsContainer
+  foldoutImportGUI: 1
+  documentId: 1LkUsdBdV0O_tCiPjMh0TWfJUaDDeYhnmEqf-5EzT3F0
+  selectedTogglesIds:
+  - Effects
+  - Units
+  foldoutSerializationGUI: 0
+  serializationOutputPath: ../../Configs
+  serializationFileName: Configs.v0.1
+  serializationFormat: 0
+  content:
+    Units:
+    - Id: 0
+      Class: warrior
+      Faction: hero
+      Strength: 10
+      Reaction: 15
+      BaseMaxHP: 100
+      BaseArmor: 5
+      BaseMaxSP: 50
+      BaseRenewAP: 1
+      BaseRenewCards: 3
+      BaseHandSize: 5
+      PositionX: 1
+      PositionZ: 1
+      SizeX: 1
+      SizeZ: 1
+      Layer: Ground
+      FacingX: 0
+      FacingZ: 1
+      UnitPrefab: Scavenger_Unit
+    Effects:
+    - UnitID: 0
+      EffectID: 1
+      EffectType: 1
+      StatusType: 0
+      Power: 5
+      Repeat: 1
+      Duration: 0
+      Charges: 0
+      TargetType: 0
+      Description: "\u041A\u0443\u0441\u0430\u0435\u0442 \u0441\u0435\u0431\u044F
+        \u0437\u0430 \u0440\u0443\u043A\u0443 -%P% HP."
+      IsVisible: 0
+      AimShapeType: 0
+      ASizeX: 1
+      ASizeZ: 1
+      Offset: 0
+      EffectShapeType: 4
+      ESizeX: 1
+      ESizeZ: 1
+      EffectShapeLevel: 5
